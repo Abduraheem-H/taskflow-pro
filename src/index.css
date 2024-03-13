@@ -40,13 +40,19 @@ body {
   flex-direction: column;
 }
 
-.header {
+.board {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.board-header {
   padding: 16px 24px;
   border-bottom: 1px solid #e2e8f0;
   font-weight: 600;
 }
 
-.content {
+.board-body {
   flex: 1;
   display: flex;
   align-items: center;

@@ -1,4 +1,5 @@
 import React from 'react';
+import { KanbanBoard } from './components/KanbanBoard';
 
 export default function App() {
   return (
@@ -8,10 +9,7 @@ export default function App() {
         <p className="sidebar-note">Boards will appear here.</p>
       </aside>
       <main className="main">
-        <header className="header">Product Roadmap</header>
-        <section className="content">
-          <p>Build your first board.</p>
-        </section>
+        <KanbanBoard />
       </main>
     </div>
   );
