@@ -1,9 +1,10 @@
 import React from 'react';
+import { Task } from '../types/task';
 import { TaskCard } from './TaskCard';
 
 interface ColumnProps {
   title: string;
-  tasks: { title: string; description?: string }[];
+  tasks: Task[];
 }
 
 export const Column = ({ title, tasks }: ColumnProps) => {
@@ -15,7 +16,7 @@ export const Column = ({ title, tasks }: ColumnProps) => {
       </div>
       <div className="column-body">
         {tasks.map((task) => (
-          <TaskCard key={task.title} title={task.title} description={task.description} />
+          <TaskCard key={task.id} task={task} />
         ))}
       </div>
     </div>

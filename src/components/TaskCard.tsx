@@ -1,15 +1,15 @@
 import React from 'react';
+import { Task } from '../types/task';
 
 interface TaskCardProps {
-  title: string;
-  description?: string;
+  task: Task;
 }
 
-export const TaskCard = ({ title, description }: TaskCardProps) => {
+export const TaskCard = ({ task }: TaskCardProps) => {
   return (
     <div className="task-card">
-      <h4>{title}</h4>
-      {description && <p>{description}</p>}
+      <h4>{task.title}</h4>
+      <p>{task.description}</p>
     </div>
   );
 };
