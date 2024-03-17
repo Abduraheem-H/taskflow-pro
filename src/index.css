@@ -81,16 +81,42 @@ body {
 .column-header {
   display: flex;
   justify-content: space-between;
-  font-weight: 600;
+  align-items: center;
   margin-bottom: 12px;
   font-size: 13px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
+.column-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
 .column-count {
-  font-size: 12px;
+  font-size: 11px;
   color: #64748b;
+}
+
+.column-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.icon-button {
+  border: none;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+}
+
+.icon-button:hover {
+  background: #f1f5f9;
+  color: #0f172a;
 }
 
 .column-body {
