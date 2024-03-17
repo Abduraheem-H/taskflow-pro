@@ -1,4 +1,5 @@
 import React from 'react';
+import { DragDropContext, DropResult } from '@hello-pangea/dnd';
 import { Column } from './Column';
 import { useTaskStore } from '../store/useTaskStore';
 
@@ -12,17 +13,26 @@ export const KanbanBoard = () => {
     { title: 'Done', status: 'done' },
   ];
 
+  const onDragEnd = (result: DropResult) => {
+    if (!result.destination) {
+      return;
+    }
+  };
+
   return (
     <div className="board">
       <header className="board-header">Product Roadmap</header>
       <div className="board-body columns">
-        {columns.map((column) => (
-          <Column
-            key={column.status}
-            title={column.title}
-            tasks={tasks.filter((task) => task.status === column.status)}
-          />
-        ))}
+        <DragDropContext onDragEnd={onDragEnd}>
+          {columns.map((column) => (
+            <Column
+              key={column.status}
+              id={column.status}
+              title={column.title}
+              tasks={tasks.filter((task) => task.status === column.status)}
+            />
+          ))}
+        </DragDropContext>
       </div>
     </div>
   );
