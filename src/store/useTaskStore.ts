@@ -1,9 +1,9 @@
 import { create } from 'zustand';
-import { Task } from '../types/task';
+import { Task, Priority } from '../types/task';
 
 interface TaskState {
   tasks: Task[];
-  addTask: (title: string, description: string) => void;
+  addTask: (title: string, description: string, priority: Priority) => void;
 }
 
 const initialTasks: Task[] = [
@@ -20,13 +20,13 @@ const initialTasks: Task[] = [
 
 export const useTaskStore = create<TaskState>((set) => ({
   tasks: initialTasks,
-  addTask: (title, description) => {
+  addTask: (title, description, priority) => {
     const newTask: Task = {
       id: `task-${Date.now()}`,
       title,
       description,
       status: 'todo',
-      priority: 'medium',
+      priority,
       createdAt: Date.now(),
       tags: []
     };

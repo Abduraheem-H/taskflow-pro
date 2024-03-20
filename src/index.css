@@ -195,6 +195,27 @@ body {
   font-family: inherit;
 }
 
+.priority {
+  display: flex;
+  gap: 8px;
+}
+
+.priority button {
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  cursor: pointer;
+  text-transform: uppercase;
+}
+
+.priority button.active {
+  background: #0f172a;
+  color: #ffffff;
+  border-color: #0f172a;
+}
+
 .modal-actions {
   display: flex;
   justify-content: flex-end;
