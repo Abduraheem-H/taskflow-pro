@@ -3,7 +3,7 @@ import { Task } from '../types/task';
 
 interface TaskState {
   tasks: Task[];
-  addTask: (task: Task) => void;
+  addTask: (title: string, description: string) => void;
 }
 
 const initialTasks: Task[] = [
@@ -20,5 +20,16 @@ const initialTasks: Task[] = [
 
 export const useTaskStore = create<TaskState>((set) => ({
   tasks: initialTasks,
-  addTask: (task) => set((state) => ({ tasks: [...state.tasks, task] }))
+  addTask: (title, description) => {
+    const newTask: Task = {
+      id: `task-${Date.now()}`,
+      title,
+      description,
+      status: 'todo',
+      priority: 'medium',
+      createdAt: Date.now(),
+      tags: []
+    };
+    set((state) => ({ tasks: [...state.tasks, newTask] }));
+  }
 }));
