@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { DragDropContext, DropResult } from '@hello-pangea/dnd';
 import { Column } from './Column';
 import { useTaskStore } from '../store/useTaskStore';
+import { AddTaskModal } from './AddTaskModal';
 
 export const KanbanBoard = () => {
   const { tasks } = useTaskStore();
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const columns = [
     { title: 'To Do', status: 'todo' },
@@ -21,7 +23,12 @@ export const KanbanBoard = () => {
 
   return (
     <div className="board">
-      <header className="board-header">Product Roadmap</header>
+      <header className="board-header">
+        <span>Product Roadmap</span>
+        <button className="primary" onClick={() => setIsModalOpen(true)}>
+          Add Task
+        </button>
+      </header>
       <div className="board-body columns">
         <DragDropContext onDragEnd={onDragEnd}>
           {columns.map((column) => (
@@ -34,6 +41,7 @@ export const KanbanBoard = () => {
           ))}
         </DragDropContext>
       </div>
+      <AddTaskModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </div>
   );
 };

@@ -51,6 +51,19 @@ body {
   border-bottom: 1px solid #e2e8f0;
   font-weight: 700;
   font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.primary {
+  border: none;
+  background: #0f172a;
+  color: #ffffff;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
 }
 
 .board-body {
@@ -143,4 +156,24 @@ body {
   margin: 0;
   font-size: 12px;
   color: #64748b;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal {
+  background: #ffffff;
+  padding: 24px;
+  border-radius: 14px;
+  width: min(420px, 90vw);
+}
+
+.modal button {
+  margin-top: 12px;
 }
