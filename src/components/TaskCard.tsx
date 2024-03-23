@@ -1,11 +1,18 @@
 import React from 'react';
 import { Draggable } from '@hello-pangea/dnd';
-import { Task } from '../types/task';
+import { Task, Priority } from '../types/task';
+import { format } from 'date-fns';
 
 interface TaskCardProps {
   task: Task;
   index: number;
 }
+
+const priorityColors: Record<Priority, string> = {
+  low: 'priority low',
+  medium: 'priority medium',
+  high: 'priority high'
+};
 
 export const TaskCard = ({ task, index }: TaskCardProps) => {
   return (
@@ -17,6 +24,10 @@ export const TaskCard = ({ task, index }: TaskCardProps) => {
           {...provided.dragHandleProps}
           className="task-card"
         >
+          <div className="task-meta">
+            <span className={priorityColors[task.priority]}>{task.priority}</span>
+            <span className="task-date">{format(task.createdAt, 'MMM d')}</span>
+          </div>
           <h4>{task.title}</h4>
           <p>{task.description}</p>
         </div>
