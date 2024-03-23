@@ -7,6 +7,7 @@ import { AddTaskModal } from './AddTaskModal';
 export const KanbanBoard = () => {
   const { tasks } = useTaskStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [query, setQuery] = useState('');
 
   const columns = [
     { title: 'To Do', status: 'todo' },
@@ -21,13 +22,28 @@ export const KanbanBoard = () => {
     }
   };
 
+  const filteredTasks = tasks.filter((task) =>
+    `${task.title} ${task.description}`.toLowerCase().includes(query.toLowerCase()),
+  );
+
   return (
     <div className="board">
       <header className="board-header">
-        <span>Product Roadmap</span>
-        <button className="primary" onClick={() => setIsModalOpen(true)}>
-          Add Task
-        </button>
+        <div>
+          <div className="board-title">Product Roadmap</div>
+          <p className="board-subtitle">Track priorities across the team.</p>
+        </div>
+        <div className="board-actions">
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search tasks"
+            className="search"
+          />
+          <button className="primary" onClick={() => setIsModalOpen(true)}>
+            Add Task
+          </button>
+        </div>
       </header>
       <div className="board-body columns">
         <DragDropContext onDragEnd={onDragEnd}>
@@ -36,7 +52,7 @@ export const KanbanBoard = () => {
               key={column.status}
               id={column.status}
               title={column.title}
-              tasks={tasks.filter((task) => task.status === column.status)}
+              tasks={filteredTasks.filter((task) => task.status === column.status)}
             />
           ))}
         </DragDropContext>
