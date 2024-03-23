@@ -192,6 +192,21 @@ body {
   color: #64748b;
 }
 
+.task-tags {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.task-tags span {
+  background: #f1f5f9;
+  color: #475569;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 10px;
+}
+
 .modal-overlay {
   position: fixed;
   inset: 0;

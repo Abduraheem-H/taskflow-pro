@@ -30,6 +30,13 @@ export const TaskCard = ({ task, index }: TaskCardProps) => {
           </div>
           <h4>{task.title}</h4>
           <p>{task.description}</p>
+          {task.tags.length > 0 && (
+            <div className="task-tags">
+              {task.tags.map((tag) => (
+                <span key={tag}>{tag}</span>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </Draggable>
