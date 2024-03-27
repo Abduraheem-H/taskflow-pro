@@ -55,6 +55,7 @@ export const KanbanBoard = () => {
               tasks={filteredTasks.filter((task) => task.status === column.status)}
             />
           ))}
+          <div className="column add-column">+ Add Section</div>
         </DragDropContext>
       </div>
       <AddTaskModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
