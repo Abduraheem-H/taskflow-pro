@@ -5,26 +5,15 @@ import { useTaskStore } from '../store/useTaskStore';
 import { AddTaskModal } from './AddTaskModal';
 
 export const KanbanBoard = () => {
-  const { tasks } = useTaskStore();
+  const { tasks, columns, columnOrder } = useTaskStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [query, setQuery] = useState('');
-
-  const columns = [
-    { title: 'To Do', status: 'todo' },
-    { title: 'In Progress', status: 'in-progress' },
-    { title: 'Review', status: 'review' },
-    { title: 'Done', status: 'done' },
-  ];
 
   const onDragEnd = (result: DropResult) => {
     if (!result.destination) {
       return;
     }
   };
-
-  const filteredTasks = tasks.filter((task) =>
-    `${task.title} ${task.description}`.toLowerCase().includes(query.toLowerCase()),
-  );
 
   return (
     <div className="board">
@@ -47,14 +36,25 @@ export const KanbanBoard = () => {
       </header>
       <div className="board-body columns">
         <DragDropContext onDragEnd={onDragEnd}>
-          {columns.map((column) => (
-            <Column
-              key={column.status}
-              id={column.status}
-              title={column.title}
-              tasks={filteredTasks.filter((task) => task.status === column.status)}
-            />
-          ))}
+          {columnOrder.map((columnId) => {
+            const column = columns[columnId];
+            const columnTasks = column.taskIds
+              .map((taskId) => tasks[taskId])
+              .filter((task) =>
+                `${task.title} ${task.description}`
+                  .toLowerCase()
+                  .includes(query.toLowerCase()),
+              );
+
+            return (
+              <Column
+                key={column.id}
+                id={column.id}
+                title={column.title}
+                tasks={columnTasks}
+              />
+            );
+          })}
           <div className="column add-column">+ Add Section</div>
         </DragDropContext>
       </div>
