@@ -5,14 +5,29 @@ import { useTaskStore } from '../store/useTaskStore';
 import { AddTaskModal } from './AddTaskModal';
 
 export const KanbanBoard = () => {
-  const { tasks, columns, columnOrder } = useTaskStore();
+  const { tasks, columns, columnOrder, moveTask, reorderColumn } = useTaskStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [query, setQuery] = useState('');
 
   const onDragEnd = (result: DropResult) => {
-    if (!result.destination) {
+    const { destination, source, draggableId } = result;
+
+    if (!destination) {
       return;
     }
+
+    if (destination.droppableId === source.droppableId) {
+      reorderColumn(source.droppableId, source.index, destination.index);
+      return;
+    }
+
+    moveTask(
+      source.droppableId,
+      destination.droppableId,
+      source.index,
+      destination.index,
+      draggableId
+    );
   };
 
   return (

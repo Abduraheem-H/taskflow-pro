@@ -12,6 +12,14 @@ interface TaskState {
   columns: Record<string, ColumnState>;
   columnOrder: string[];
   addTask: (title: string, description: string, priority: Priority) => void;
+  moveTask: (
+    sourceColumnId: string,
+    destinationColumnId: string,
+    sourceIndex: number,
+    destinationIndex: number,
+    taskId: string
+  ) => void;
+  reorderColumn: (columnId: string, startIndex: number, endIndex: number) => void;
 }
 
 const initialTasks: Record<string, Task> = {
@@ -58,5 +66,43 @@ export const useTaskStore = create<TaskState>((set) => ({
         }
       }
     }));
+  },
+  moveTask: (sourceColumnId, destinationColumnId, sourceIndex, destinationIndex, taskId) => {
+    set((state) => {
+      const sourceColumn = state.columns[sourceColumnId];
+      const destinationColumn = state.columns[destinationColumnId];
+      const sourceTaskIds = Array.from(sourceColumn.taskIds);
+      const destinationTaskIds = Array.from(destinationColumn.taskIds);
+
+      sourceTaskIds.splice(sourceIndex, 1);
+      destinationTaskIds.splice(destinationIndex, 0, taskId);
+
+      return {
+        tasks: {
+          ...state.tasks,
+          [taskId]: { ...state.tasks[taskId], status: destinationColumnId }
+        },
+        columns: {
+          ...state.columns,
+          [sourceColumnId]: { ...sourceColumn, taskIds: sourceTaskIds },
+          [destinationColumnId]: { ...destinationColumn, taskIds: destinationTaskIds }
+        }
+      };
+    });
+  },
+  reorderColumn: (columnId, startIndex, endIndex) => {
+    set((state) => {
+      const column = state.columns[columnId];
+      const newTaskIds = Array.from(column.taskIds);
+      const [removed] = newTaskIds.splice(startIndex, 1);
+      newTaskIds.splice(endIndex, 0, removed);
+
+      return {
+        columns: {
+          ...state.columns,
+          [columnId]: { ...column, taskIds: newTaskIds }
+        }
+      };
+    });
   }
 }));
