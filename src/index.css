@@ -15,3 +15,11 @@
   background: #0f172a;
   color: #ffffff;
 }
+
+.chat-window { border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px; background: #ffffff; max-width: 420px; margin: 24px; }
+.chat-header { font-weight: 600; margin-bottom: 12px; }
+.chat-body { min-height: 120px; color: #64748b; }
+.chat-input { display: flex; gap: 8px; margin-top: 12px; }
+.chat-input input { flex: 1; padding: 8px 10px; border: 1px solid #e2e8f0; border-radius: 8px; }
+.chat-input button { border: none; background: #0f172a; color: #ffffff; padding: 8px 12px; border-radius: 8px; }
+
