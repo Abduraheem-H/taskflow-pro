@@ -1,0 +1,5 @@
+{
+  "name": "TaskFlow Pro",
+  "description": "An advanced Kanban-style task management application with drag-and-drop, priority tagging, and persistent state.",
+  "requestFramePermissions": []
+}
