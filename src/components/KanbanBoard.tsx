@@ -23,25 +23,27 @@ interface KanbanBoardProps {
 }
 
 const NAV_ITEMS = [
+  { id: 'dashboard', label: 'Dashboard' },
+  { id: 'my-tasks', label: 'My Tasks' },
+  { id: 'projects', label: 'Projects' },
+  { id: 'team', label: 'Team' }
+];
+
+const PROJECTS = [
   {
-    id: 'dashboard',
-    label: 'Dashboard',
-    description: 'Track high-level progress and upcoming milestones.'
+    id: 'roadmap',
+    name: 'Product Roadmap',
+    description: 'Manage and track your product development lifecycle.'
   },
   {
-    id: 'my-tasks',
-    label: 'My Tasks',
-    description: 'Focus on the work assigned to you across projects.'
+    id: 'launch',
+    name: 'Launch Plan',
+    description: 'Coordinate milestones and release deliverables in one view.'
   },
   {
-    id: 'projects',
-    label: 'Projects',
-    description: 'Switch between project roadmaps and active initiatives.'
-  },
-  {
-    id: 'team',
-    label: 'Team',
-    description: 'Review workloads and coordinate with teammates.'
+    id: 'growth',
+    name: 'Growth Experiments',
+    description: 'Run experiments and capture insights with your team.'
   }
 ];
 
@@ -63,8 +65,11 @@ export const KanbanBoard = ({ onOpenAssistant }: KanbanBoardProps) => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [activePriorities, setActivePriorities] = useState<Priority[]>([]);
   const [activeNav, setActiveNav] = useState(NAV_ITEMS[0].id);
+  const [activeProjectId, setActiveProjectId] = useState(PROJECTS[0].id);
+  const [isProjectMenuOpen, setIsProjectMenuOpen] = useState(false);
 
   const activeNavItem = NAV_ITEMS.find((item) => item.id === activeNav) ?? NAV_ITEMS[0];
+  const activeProject = PROJECTS.find((project) => project.id === activeProjectId) ?? PROJECTS[0];
 
   const onDragEnd = (result: DropResult) => {
     const { destination, source, draggableId } = result;
@@ -156,6 +161,11 @@ export const KanbanBoard = ({ onOpenAssistant }: KanbanBoardProps) => {
     }
   };
 
+  const handleProjectSelect = (projectId: string) => {
+    setActiveProjectId(projectId);
+    setIsProjectMenuOpen(false);
+  };
+
   const activeFilterCount = activePriorities.length;
 
   return (
@@ -221,13 +231,49 @@ export const KanbanBoard = ({ onOpenAssistant }: KanbanBoardProps) => {
       {/* Sub-header */}
       <div className="px-8 py-6 border-b border-brand-border flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-brand-bg">
         <div>
-          <div className="flex items-center gap-3 mb-1">
-            <h2 className="text-2xl font-bold tracking-tight">Product Roadmap</h2>
-            <button className="p-1 hover:bg-white/5 rounded-md text-brand-muted">
-              <ChevronDown size={16} />
+          <div className="flex items-center gap-3 mb-1 relative">
+            <button
+              onClick={() => setIsProjectMenuOpen((prev) => !prev)}
+              className="flex items-center gap-2 group"
+            >
+              <h2 className="text-2xl font-bold tracking-tight">
+                {activeProject.name}
+              </h2>
+              <ChevronDown
+                size={16}
+                className={cn(
+                  "text-brand-muted transition-transform",
+                  isProjectMenuOpen ? "rotate-180" : "rotate-0"
+                )}
+              />
             </button>
+            <span className="text-[10px] uppercase tracking-widest px-2 py-1 rounded-full bg-white/5 border border-white/10 text-brand-muted">
+              {activeNavItem.label}
+            </span>
+
+            {isProjectMenuOpen && (
+              <div className="absolute left-0 top-12 w-64 bg-brand-surface border border-brand-border rounded-2xl shadow-xl p-2 z-30">
+                {PROJECTS.map((project) => (
+                  <button
+                    key={project.id}
+                    onClick={() => handleProjectSelect(project.id)}
+                    className={cn(
+                      "w-full text-left px-3 py-2 rounded-xl transition-all",
+                      activeProjectId === project.id
+                        ? "bg-white/10 text-white"
+                        : "text-brand-muted hover:bg-white/5 hover:text-white"
+                    )}
+                  >
+                    <p className="text-sm font-semibold">{project.name}</p>
+                    <p className="text-xs opacity-60 mt-1">
+                      {project.description}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
-          <p className="text-sm text-brand-muted">{activeNavItem.description}</p>
+          <p className="text-sm text-brand-muted">{activeProject.description}</p>
         </div>
 
         <div className="flex items-center gap-3">
