@@ -4,9 +4,10 @@ import { useTaskStore } from '../store/useTaskStore';
 import { Column } from './Column';
 import { AddTaskModal } from './AddTaskModal';
 import { TaskList } from './TaskList';
+import { Priority } from '../types/task';
 import { 
   Search, 
-  Filter, 
+  Filter,
   LayoutGrid, 
   List, 
   Plus, 
@@ -20,6 +21,8 @@ export const KanbanBoard = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'board' | 'list'>('board');
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [activePriorities, setActivePriorities] = useState<Priority[]>([]);
 
   const onDragEnd = (result: DropResult) => {
     const { destination, source, draggableId } = result;
@@ -55,11 +58,30 @@ export const KanbanBoard = () => {
     );
   };
 
+  const matchesPriority = (priority: Priority) => {
+    if (activePriorities.length === 0) return true;
+    return activePriorities.includes(priority);
+  };
+
+  const matchesFilters = (title: string, description: string, priority: Priority) => {
+    return matchesSearch(title, description) && matchesPriority(priority);
+  };
+
   const listTasks = columnOrder.flatMap((columnId) =>
     columns[columnId].taskIds
       .map((taskId) => tasks[taskId])
-      .filter((task) => matchesSearch(task.title, task.description))
+      .filter((task) => matchesFilters(task.title, task.description, task.priority))
   );
+
+  const togglePriority = (priority: Priority) => {
+    setActivePriorities((prev) =>
+      prev.includes(priority)
+        ? prev.filter((item) => item !== priority)
+        : [...prev, priority]
+    );
+  };
+
+  const activeFilterCount = activePriorities.length;
 
   return (
     <div className="flex-1 flex flex-col h-screen bg-brand-bg overflow-hidden">
@@ -119,6 +141,56 @@ export const KanbanBoard = () => {
         </div>
 
         <div className="flex items-center gap-3">
+          <div className="relative">
+            <button
+              onClick={() => setIsFilterOpen((prev) => !prev)}
+              className="flex items-center gap-2 px-3 py-2 text-sm border border-brand-border rounded-xl bg-white/5 text-brand-muted hover:text-white hover:border-white/20 transition-all"
+            >
+              <Filter size={16} />
+              <span>Filter</span>
+              {activeFilterCount > 0 && (
+                <span className="ml-1 text-[10px] font-bold bg-white text-black px-2 py-0.5 rounded-full">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
+
+            {isFilterOpen && (
+              <div className="absolute right-0 mt-2 w-56 bg-brand-surface border border-brand-border rounded-2xl shadow-xl p-3 z-30">
+                <div className="text-[10px] font-semibold uppercase tracking-widest text-brand-muted mb-2">
+                  Priority
+                </div>
+                <div className="space-y-2">
+                  {(['low', 'medium', 'high'] as Priority[]).map((priority) => {
+                    const isActive = activePriorities.includes(priority);
+                    return (
+                      <button
+                        key={priority}
+                        onClick={() => togglePriority(priority)}
+                        className={
+                          isActive
+                            ? "w-full flex items-center justify-between px-3 py-2 rounded-xl bg-white/10 text-white"
+                            : "w-full flex items-center justify-between px-3 py-2 rounded-xl text-brand-muted hover:bg-white/5 hover:text-white"
+                        }
+                      >
+                        <span className="text-xs font-medium capitalize">{priority}</span>
+                        <span className="text-[10px]">
+                          {isActive ? 'On' : 'Off'}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <button
+                  onClick={() => setActivePriorities([])}
+                  className="w-full mt-3 text-xs text-brand-muted hover:text-white transition-colors"
+                >
+                  Clear filters
+                </button>
+              </div>
+            )}
+          </div>
+
           <div className="flex items-center bg-white/5 border border-brand-border rounded-xl p-1">
             <button 
               onClick={() => setViewMode('board')}
@@ -160,7 +232,7 @@ export const KanbanBoard = () => {
                 const column = columns[columnId];
                 const columnTasks = column.taskIds
                   .map((taskId) => tasks[taskId])
-                  .filter(task => matchesSearch(task.title, task.description));
+                  .filter((task) => matchesFilters(task.title, task.description, task.priority));
 
                 return (
                   <Column 
