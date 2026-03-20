@@ -1,25 +1,28 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
-import { Task, Priority } from '../types/task';
+import { Task, Priority, Column, ColumnId } from '../types/task';
 
 interface TaskState {
   tasks: Record<string, Task>;
-  columns: Record<string, { id: string; title: string; taskIds: string[] }>;
-  columnOrder: string[];
+  columns: Record<string, Column>;
+  columnOrder: ColumnId[];
   
   // Actions
-  addTask: (columnId: string, title: string, description: string, priority: Priority) => void;
+  addTask: (columnId: ColumnId, title: string, description: string, priority: Priority) => void;
   updateTask: (taskId: string, updates: Partial<Task>) => void;
-  deleteTask: (taskId: string, columnId: string) => void;
+  deleteTask: (taskId: string, columnId: ColumnId) => void;
   moveTask: (
-    sourceColumnId: string,
-    destinationColumnId: string,
+    sourceColumnId: ColumnId,
+    destinationColumnId: ColumnId,
     sourceIndex: number,
     destinationIndex: number,
     taskId: string
   ) => void;
-  reorderColumn: (columnId: string, startIndex: number, endIndex: number) => void;
+  reorderColumn: (columnId: ColumnId, startIndex: number, endIndex: number) => void;
+  addColumn: (title: string) => ColumnId;
+  renameColumn: (columnId: ColumnId, title: string) => void;
+  deleteColumn: (columnId: ColumnId) => void;
 }
 
 const initialTasks: Record<string, Task> = {
@@ -43,7 +46,7 @@ const initialTasks: Record<string, Task> = {
   }
 };
 
-const initialColumns = {
+const initialColumns: Record<string, Column> = {
   'todo': { id: 'todo', title: 'To Do', taskIds: ['task-1'] },
   'in-progress': { id: 'in-progress', title: 'In Progress', taskIds: ['task-2'] },
   'review': { id: 'review', title: 'Review', taskIds: [] },
@@ -63,7 +66,7 @@ export const useTaskStore = create<TaskState>()(
           id,
           title,
           description,
-          status: columnId as any,
+          status: columnId,
           priority,
           createdAt: Date.now(),
           tags: []
@@ -122,7 +125,7 @@ export const useTaskStore = create<TaskState>()(
           return {
             tasks: {
               ...state.tasks,
-              [taskId]: { ...state.tasks[taskId], status: destColId as any }
+              [taskId]: { ...state.tasks[taskId], status: destColId }
             },
             columns: {
               ...state.columns,
@@ -145,6 +148,72 @@ export const useTaskStore = create<TaskState>()(
               ...state.columns,
               [columnId]: { ...column, taskIds: newTaskIds }
             }
+          };
+        });
+      },
+
+      addColumn: (title) => {
+        const id = `col-${uuidv4().slice(0, 8)}`;
+
+        set((state) => ({
+          columns: {
+            ...state.columns,
+            [id]: { id, title, taskIds: [] }
+          },
+          columnOrder: [...state.columnOrder, id]
+        }));
+
+        return id;
+      },
+
+      renameColumn: (columnId, title) => {
+        set((state) => {
+          if (!state.columns[columnId]) return state;
+
+          return {
+            columns: {
+              ...state.columns,
+              [columnId]: { ...state.columns[columnId], title }
+            }
+          };
+        });
+      },
+
+      deleteColumn: (columnId) => {
+        set((state) => {
+          if (!state.columns[columnId] || state.columnOrder.length <= 1) return state;
+
+          const remainingOrder = state.columnOrder.filter((id) => id !== columnId);
+          const fallbackColumnId = remainingOrder[0];
+          const removedTaskIds = state.columns[columnId].taskIds;
+
+          const newColumns = { ...state.columns };
+          delete newColumns[columnId];
+
+          const newTasks = { ...state.tasks };
+
+          if (fallbackColumnId) {
+            removedTaskIds.forEach((taskId) => {
+              if (newTasks[taskId]) {
+                newTasks[taskId] = { ...newTasks[taskId], status: fallbackColumnId };
+              }
+            });
+
+            const fallbackColumn = newColumns[fallbackColumnId];
+            newColumns[fallbackColumnId] = {
+              ...fallbackColumn,
+              taskIds: [...fallbackColumn.taskIds, ...removedTaskIds]
+            };
+          } else {
+            removedTaskIds.forEach((taskId) => {
+              delete newTasks[taskId];
+            });
+          }
+
+          return {
+            tasks: newTasks,
+            columns: newColumns,
+            columnOrder: remainingOrder
           };
         });
       }

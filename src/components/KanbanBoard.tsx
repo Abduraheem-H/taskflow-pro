@@ -17,7 +17,16 @@ import {
 } from 'lucide-react';
 
 export const KanbanBoard = () => {
-  const { tasks, columns, columnOrder, moveTask, reorderColumn } = useTaskStore();
+  const { 
+    tasks, 
+    columns, 
+    columnOrder, 
+    moveTask, 
+    reorderColumn,
+    addColumn,
+    renameColumn,
+    deleteColumn
+  } = useTaskStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'board' | 'list'>('board');
@@ -79,6 +88,34 @@ export const KanbanBoard = () => {
         ? prev.filter((item) => item !== priority)
         : [...prev, priority]
     );
+  };
+
+  const handleAddColumn = () => {
+    const name = prompt('Column name');
+    if (!name || !name.trim()) return;
+    addColumn(name.trim());
+  };
+
+  const handleRenameColumn = (columnId: string) => {
+    const currentTitle = columns[columnId]?.title ?? 'Column';
+    const nextTitle = prompt('Rename column', currentTitle);
+    if (!nextTitle || !nextTitle.trim()) return;
+    renameColumn(columnId, nextTitle.trim());
+  };
+
+  const handleDeleteColumn = (columnId: string) => {
+    const column = columns[columnId];
+    if (!column) return;
+
+    const remaining = columnOrder.filter((id) => id !== columnId);
+    const fallbackTitle = remaining.length > 0 ? columns[remaining[0]]?.title : '';
+    const confirmationMessage = remaining.length > 0
+      ? `Delete "${column.title}"? Tasks will move to "${fallbackTitle}".`
+      : `Delete "${column.title}"? This will remove all tasks in the column.`;
+
+    if (confirm(confirmationMessage)) {
+      deleteColumn(columnId);
+    }
   };
 
   const activeFilterCount = activePriorities.length;
@@ -240,13 +277,20 @@ export const KanbanBoard = () => {
                     id={column.id} 
                     title={column.title} 
                     tasks={columnTasks} 
+                    onAddTask={() => setIsModalOpen(true)}
+                    onRename={handleRenameColumn}
+                    onDelete={handleDeleteColumn}
+                    canDelete={columnOrder.length > 1}
                   />
                 );
               })}
               
               {/* Add Column Placeholder */}
               <div className="w-80 shrink-0 h-full">
-                <button className="w-full h-12 border border-dashed border-brand-border rounded-2xl flex items-center justify-center gap-2 text-brand-muted hover:text-white hover:border-white/20 transition-all group">
+                <button
+                  onClick={handleAddColumn}
+                  className="w-full h-12 border border-dashed border-brand-border rounded-2xl flex items-center justify-center gap-2 text-brand-muted hover:text-white hover:border-white/20 transition-all group"
+                >
                   <Plus size={18} className="group-hover:scale-110 transition-transform" />
                   <span className="text-sm font-medium">Add Section</span>
                 </button>
