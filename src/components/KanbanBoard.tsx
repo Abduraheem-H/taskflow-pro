@@ -101,6 +101,7 @@ export const KanbanBoard = ({ onOpenAssistant }: KanbanBoardProps) => {
   const [isProjectMenuOpen, setIsProjectMenuOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>(INITIAL_NOTIFICATIONS);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const activeNavItem = NAV_ITEMS.find((item) => item.id === activeNav) ?? NAV_ITEMS[0];
   const activeProject = PROJECTS.find((project) => project.id === activeProjectId) ?? PROJECTS[0];
@@ -211,6 +212,16 @@ export const KanbanBoard = ({ onOpenAssistant }: KanbanBoardProps) => {
     );
   };
 
+  const handleResetWorkspace = () => {
+    setSearchQuery('');
+    setActivePriorities([]);
+    setViewMode('board');
+    setIsFilterOpen(false);
+    setIsProjectMenuOpen(false);
+    setIsNotificationsOpen(false);
+    setIsSettingsOpen(false);
+  };
+
   const activeFilterCount = activePriorities.length;
 
   return (
@@ -312,9 +323,57 @@ export const KanbanBoard = ({ onOpenAssistant }: KanbanBoardProps) => {
               </div>
             )}
           </div>
-          <button className="p-2 hover:bg-white/5 rounded-xl text-brand-muted hover:text-white transition-all">
-            <Settings size={20} />
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => setIsSettingsOpen((prev) => !prev)}
+              className="p-2 hover:bg-white/5 rounded-xl text-brand-muted hover:text-white transition-all"
+            >
+              <Settings size={20} />
+            </button>
+
+            {isSettingsOpen && (
+              <div className="absolute right-0 mt-2 w-56 bg-brand-surface border border-brand-border rounded-2xl shadow-xl z-30 overflow-hidden">
+                <div className="px-4 py-3 border-b border-brand-border">
+                  <p className="text-sm font-semibold">Workspace</p>
+                </div>
+                <div className="p-2">
+                  <button
+                    onClick={() => {
+                      setSearchQuery('');
+                      setIsSettingsOpen(false);
+                    }}
+                    className="w-full text-left px-3 py-2 rounded-xl text-sm text-brand-muted hover:text-white hover:bg-white/5"
+                  >
+                    Clear search
+                  </button>
+                  <button
+                    onClick={() => {
+                      setActivePriorities([]);
+                      setIsSettingsOpen(false);
+                    }}
+                    className="w-full text-left px-3 py-2 rounded-xl text-sm text-brand-muted hover:text-white hover:bg-white/5"
+                  >
+                    Reset filters
+                  </button>
+                  <button
+                    onClick={() => {
+                      setViewMode('board');
+                      setIsSettingsOpen(false);
+                    }}
+                    className="w-full text-left px-3 py-2 rounded-xl text-sm text-brand-muted hover:text-white hover:bg-white/5"
+                  >
+                    Reset view
+                  </button>
+                  <button
+                    onClick={handleResetWorkspace}
+                    className="w-full text-left px-3 py-2 rounded-xl text-sm text-brand-muted hover:text-white hover:bg-white/5"
+                  >
+                    Reset workspace
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 border border-white/10" />
         </div>
       </header>
