@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { DragDropContext, DropResult } from '@hello-pangea/dnd';
 import { useTaskStore } from '../store/useTaskStore';
 import { Column } from './Column';
@@ -86,10 +86,53 @@ export const KanbanBoard = ({ onOpenAssistant }: KanbanBoardProps) => {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
+  const filterRef = useRef<HTMLDivElement>(null);
+  const projectRef = useRef<HTMLDivElement>(null);
+  const notificationsRef = useRef<HTMLDivElement>(null);
+  const settingsRef = useRef<HTMLDivElement>(null);
+
   const activeNavItem = NAV_ITEMS.find((item) => item.id === activeNav) ?? NAV_ITEMS[0];
   const activeProject = WORKSPACE_PROJECTS.find((project) => project.id === activeProjectId) ?? WORKSPACE_PROJECTS[0];
   const unreadNotifications = notifications.filter((item) => !item.read).length;
   const primaryAssignee = WORKSPACE_ASSIGNEES[0] ?? 'You';
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+
+      if (isFilterOpen && filterRef.current && !filterRef.current.contains(target)) {
+        setIsFilterOpen(false);
+      }
+
+      if (isProjectMenuOpen && projectRef.current && !projectRef.current.contains(target)) {
+        setIsProjectMenuOpen(false);
+      }
+
+      if (isNotificationsOpen && notificationsRef.current && !notificationsRef.current.contains(target)) {
+        setIsNotificationsOpen(false);
+      }
+
+      if (isSettingsOpen && settingsRef.current && !settingsRef.current.contains(target)) {
+        setIsSettingsOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      setIsFilterOpen(false);
+      setIsProjectMenuOpen(false);
+      setIsNotificationsOpen(false);
+      setIsSettingsOpen(false);
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isFilterOpen, isProjectMenuOpen, isNotificationsOpen, isSettingsOpen]);
 
   const onDragEnd = (result: DropResult) => {
     const { destination, source, draggableId } = result;
@@ -116,9 +159,45 @@ export const KanbanBoard = ({ onOpenAssistant }: KanbanBoardProps) => {
     }
   };
 
+  const closeAllMenus = () => {
+    setIsFilterOpen(false);
+    setIsProjectMenuOpen(false);
+    setIsNotificationsOpen(false);
+    setIsSettingsOpen(false);
+  };
+
+  const toggleFilterMenu = () => {
+    setIsFilterOpen((prev) => !prev);
+    setIsProjectMenuOpen(false);
+    setIsNotificationsOpen(false);
+    setIsSettingsOpen(false);
+  };
+
+  const toggleProjectMenu = () => {
+    setIsProjectMenuOpen((prev) => !prev);
+    setIsFilterOpen(false);
+    setIsNotificationsOpen(false);
+    setIsSettingsOpen(false);
+  };
+
+  const toggleNotificationsMenu = () => {
+    setIsNotificationsOpen((prev) => !prev);
+    setIsFilterOpen(false);
+    setIsProjectMenuOpen(false);
+    setIsSettingsOpen(false);
+  };
+
+  const toggleSettingsMenu = () => {
+    setIsSettingsOpen((prev) => !prev);
+    setIsFilterOpen(false);
+    setIsProjectMenuOpen(false);
+    setIsNotificationsOpen(false);
+  };
+
   const openTaskModal = (columnId?: string) => {
     setActiveColumnId(columnId ?? columnOrder[0] ?? null);
     setIsModalOpen(true);
+    closeAllMenus();
   };
 
   const normalizedQuery = searchQuery.toLowerCase().trim();
@@ -280,9 +359,9 @@ export const KanbanBoard = ({ onOpenAssistant }: KanbanBoardProps) => {
               Assistant
             </button>
           )}
-          <div className="relative">
+          <div className="relative" ref={notificationsRef}>
             <button
-              onClick={() => setIsNotificationsOpen((prev) => !prev)}
+              onClick={toggleNotificationsMenu}
               className="p-2 hover:bg-white/5 rounded-xl text-brand-muted hover:text-white transition-all relative"
             >
               <Bell size={20} />
@@ -329,9 +408,9 @@ export const KanbanBoard = ({ onOpenAssistant }: KanbanBoardProps) => {
               </div>
             )}
           </div>
-          <div className="relative">
+          <div className="relative" ref={settingsRef}>
             <button
-              onClick={() => setIsSettingsOpen((prev) => !prev)}
+              onClick={toggleSettingsMenu}
               className="p-2 hover:bg-white/5 rounded-xl text-brand-muted hover:text-white transition-all"
             >
               <Settings size={20} />
@@ -387,9 +466,9 @@ export const KanbanBoard = ({ onOpenAssistant }: KanbanBoardProps) => {
       {/* Sub-header */}
       <div className="px-8 py-6 border-b border-brand-border flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-brand-bg">
         <div>
-          <div className="flex items-center gap-3 mb-1 relative">
+          <div className="flex items-center gap-3 mb-1 relative" ref={projectRef}>
             <button
-              onClick={() => setIsProjectMenuOpen((prev) => !prev)}
+              onClick={toggleProjectMenu}
               className="flex items-center gap-2 group"
             >
               <h2 className="text-2xl font-bold tracking-tight">
@@ -433,9 +512,9 @@ export const KanbanBoard = ({ onOpenAssistant }: KanbanBoardProps) => {
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="relative">
+          <div className="relative" ref={filterRef}>
             <button
-              onClick={() => setIsFilterOpen((prev) => !prev)}
+              onClick={toggleFilterMenu}
               className="flex items-center gap-2 px-3 py-2 text-sm border border-brand-border rounded-xl bg-white/5 text-brand-muted hover:text-white hover:border-white/20 transition-all"
             >
               <Filter size={16} />

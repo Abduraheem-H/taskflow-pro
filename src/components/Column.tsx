@@ -113,6 +113,11 @@ export const Column = ({
             {tasks.map((task, index) => (
               <TaskCard key={task.id} task={task} index={index} />
             ))}
+            {tasks.length === 0 && (
+              <div className="px-3 py-4 text-xs text-brand-muted border border-dashed border-brand-border/60 rounded-xl">
+                No tasks yet. Add a new task to get started.
+              </div>
+            )}
             {provided.placeholder}
           </div>
         )}
