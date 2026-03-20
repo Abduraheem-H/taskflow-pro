@@ -5,6 +5,7 @@ import { Column } from './Column';
 import { AddTaskModal } from './AddTaskModal';
 import { TaskList } from './TaskList';
 import { Priority } from '../types/task';
+import { WORKSPACE_PROJECTS, WORKSPACE_ASSIGNEES } from '../data/workspace';
 import { 
   Search, 
   Filter,
@@ -35,24 +36,6 @@ const NAV_ITEMS = [
   { id: 'my-tasks', label: 'My Tasks' },
   { id: 'projects', label: 'Projects' },
   { id: 'team', label: 'Team' }
-];
-
-const PROJECTS = [
-  {
-    id: 'roadmap',
-    name: 'Product Roadmap',
-    description: 'Manage and track your product development lifecycle.'
-  },
-  {
-    id: 'launch',
-    name: 'Launch Plan',
-    description: 'Coordinate milestones and release deliverables in one view.'
-  },
-  {
-    id: 'growth',
-    name: 'Growth Experiments',
-    description: 'Run experiments and capture insights with your team.'
-  }
 ];
 
 const INITIAL_NOTIFICATIONS: NotificationItem[] = [
@@ -97,15 +80,16 @@ export const KanbanBoard = ({ onOpenAssistant }: KanbanBoardProps) => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [activePriorities, setActivePriorities] = useState<Priority[]>([]);
   const [activeNav, setActiveNav] = useState(NAV_ITEMS[0].id);
-  const [activeProjectId, setActiveProjectId] = useState(PROJECTS[0].id);
+  const [activeProjectId, setActiveProjectId] = useState(WORKSPACE_PROJECTS[0]?.id ?? 'roadmap');
   const [isProjectMenuOpen, setIsProjectMenuOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>(INITIAL_NOTIFICATIONS);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const activeNavItem = NAV_ITEMS.find((item) => item.id === activeNav) ?? NAV_ITEMS[0];
-  const activeProject = PROJECTS.find((project) => project.id === activeProjectId) ?? PROJECTS[0];
+  const activeProject = WORKSPACE_PROJECTS.find((project) => project.id === activeProjectId) ?? WORKSPACE_PROJECTS[0];
   const unreadNotifications = notifications.filter((item) => !item.read).length;
+  const primaryAssignee = WORKSPACE_ASSIGNEES[0] ?? 'You';
 
   const onDragEnd = (result: DropResult) => {
     const { destination, source, draggableId } = result;
@@ -151,14 +135,36 @@ export const KanbanBoard = ({ onOpenAssistant }: KanbanBoardProps) => {
     return activePriorities.includes(priority);
   };
 
-  const matchesFilters = (title: string, description: string, priority: Priority) => {
-    return matchesSearch(title, description) && matchesPriority(priority);
+  const matchesProject = (projectId?: string) => {
+    if (!projectId) return true;
+    return projectId === activeProjectId;
+  };
+
+  const matchesNav = (assignee?: string) => {
+    if (activeNav === 'my-tasks') {
+      return assignee === primaryAssignee;
+    }
+
+    if (activeNav === 'team') {
+      return Boolean(assignee && assignee !== primaryAssignee);
+    }
+
+    return true;
+  };
+
+  const matchesFilters = (title: string, description: string, priority: Priority, projectId?: string, assignee?: string) => {
+    return (
+      matchesSearch(title, description) &&
+      matchesPriority(priority) &&
+      matchesProject(projectId) &&
+      matchesNav(assignee)
+    );
   };
 
   const listTasks = columnOrder.flatMap((columnId) =>
     columns[columnId].taskIds
       .map((taskId) => tasks[taskId])
-      .filter((task) => matchesFilters(task.title, task.description, task.priority))
+      .filter((task) => matchesFilters(task.title, task.description, task.priority, task.projectId, task.assignee))
   );
 
   const togglePriority = (priority: Priority) => {
@@ -387,7 +393,7 @@ export const KanbanBoard = ({ onOpenAssistant }: KanbanBoardProps) => {
               className="flex items-center gap-2 group"
             >
               <h2 className="text-2xl font-bold tracking-tight">
-                {activeProject.name}
+                {activeProject?.name}
               </h2>
               <ChevronDown
                 size={16}
@@ -403,7 +409,7 @@ export const KanbanBoard = ({ onOpenAssistant }: KanbanBoardProps) => {
 
             {isProjectMenuOpen && (
               <div className="absolute left-0 top-12 w-64 bg-brand-surface border border-brand-border rounded-2xl shadow-xl p-2 z-30">
-                {PROJECTS.map((project) => (
+                {WORKSPACE_PROJECTS.map((project) => (
                   <button
                     key={project.id}
                     onClick={() => handleProjectSelect(project.id)}
@@ -423,7 +429,7 @@ export const KanbanBoard = ({ onOpenAssistant }: KanbanBoardProps) => {
               </div>
             )}
           </div>
-          <p className="text-sm text-brand-muted">{activeProject.description}</p>
+          <p className="text-sm text-brand-muted">{activeProject?.description}</p>
         </div>
 
         <div className="flex items-center gap-3">
@@ -518,7 +524,7 @@ export const KanbanBoard = ({ onOpenAssistant }: KanbanBoardProps) => {
                 const column = columns[columnId];
                 const columnTasks = column.taskIds
                   .map((taskId) => tasks[taskId])
-                  .filter((task) => matchesFilters(task.title, task.description, task.priority));
+                  .filter((task) => matchesFilters(task.title, task.description, task.priority, task.projectId, task.assignee));
 
                 return (
                   <Column 
@@ -560,6 +566,7 @@ export const KanbanBoard = ({ onOpenAssistant }: KanbanBoardProps) => {
           setActiveColumnId(null);
         }}
         defaultColumnId={activeColumnId}
+        defaultProjectId={activeProjectId}
       />
     </div>
 
