@@ -26,7 +26,7 @@ export async function generateChatResponse(messages: Message[]) {
         { role: 'user', parts: [{ text: lastMessage }] }
       ],
       config: {
-        systemInstruction: "You are Lumina, a premium AI assistant designed for a high-end workspace. You are helpful, concise, and professional. You support markdown formatting.",
+        systemInstruction: "You are TaskFlow AI, a workspace assistant for a modern project management app. You are helpful, concise, and professional. You support markdown formatting.",
       }
     });
 

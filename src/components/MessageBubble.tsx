@@ -27,7 +27,7 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
       
       <div className="flex-1 min-w-0 space-y-2">
         <p className="text-xs font-semibold uppercase tracking-wider opacity-40">
-          {isAssistant ? "Lumina AI" : "You"}
+          {isAssistant ? "TaskFlow AI" : "You"}
         </p>
         <div className="prose prose-invert prose-sm max-w-none prose-p:leading-relaxed prose-pre:bg-white/5 prose-pre:border prose-pre:border-white/10">
           <ReactMarkdown>{message.content}</ReactMarkdown>

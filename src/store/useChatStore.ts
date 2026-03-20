@@ -83,7 +83,7 @@ export const useChatStore = create<ChatState>()(
       clearAllSessions: () => set({ sessions: [], currentSessionId: null }),
     }),
     {
-      name: 'lumina-chat-storage',
+      name: 'taskflow-chat-storage',
     }
   )
 );

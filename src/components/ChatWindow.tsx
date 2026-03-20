@@ -4,11 +4,13 @@ import { MessageBubble } from './MessageBubble';
 import { ChatInput } from './ChatInput';
 import { generateChatResponse } from '../services/gemini';
 import { useMutation } from '@tanstack/react-query';
-import { PanelLeftOpen, Sparkles } from 'lucide-react';
-import { cn } from '../lib/utils';
-import { motion, AnimatePresence } from 'motion/react';
+import { PanelLeftOpen, Sparkles, ArrowLeft } from 'lucide-react';\nimport { motion } from 'motion/react';
 
-export const ChatWindow = () => {
+interface ChatWindowProps {
+  onBack?: () => void;
+}
+
+export const ChatWindow = ({ onBack }: ChatWindowProps) => {
   const { 
     sessions, 
     currentSessionId, 
@@ -79,6 +81,14 @@ export const ChatWindow = () => {
       {/* Header */}
       <header className="h-16 border-b border-brand-border flex items-center px-6 justify-between bg-brand-bg/50 backdrop-blur-md z-10">
         <div className="flex items-center gap-4">
+          {onBack && (
+            <button 
+              onClick={onBack}
+              className="p-2 hover:bg-white/5 rounded-lg transition-colors"
+            >
+              <ArrowLeft size={18} />
+            </button>
+          )}
           {!isSidebarOpen && (
             <button 
               onClick={() => setSidebarOpen(true)}
@@ -93,7 +103,7 @@ export const ChatWindow = () => {
         </div>
         <div className="flex items-center gap-2">
           <div className="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] font-medium tracking-wider uppercase opacity-60">
-            Gemini 3 Flash
+            TaskFlow AI
           </div>
         </div>
       </header>
@@ -126,7 +136,7 @@ export const ChatWindow = () => {
               transition={{ delay: 0.2 }}
               className="text-brand-muted max-w-md text-sm leading-relaxed"
             >
-              Lumina is your premium AI workspace. Ask questions, generate content, or explore ideas with the power of Gemini.
+              TaskFlow AI is your workspace companion. Ask questions, generate content, or explore ideas for your projects.
             </motion.p>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-12 w-full max-w-2xl">

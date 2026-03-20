@@ -1,6 +1,6 @@
 import React from 'react';
 import { useChatStore } from '../store/useChatStore';
-import { Plus, MessageSquare, Trash2, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { Plus, MessageSquare, Trash2, PanelLeftClose } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { format } from 'date-fns';
 
@@ -24,7 +24,7 @@ export const Sidebar = () => {
       )}
     >
       <div className="p-4 flex items-center justify-between">
-        <h1 className="text-lg font-semibold tracking-tight">Lumina</h1>
+        <h1 className="text-lg font-semibold tracking-tight">TaskFlow AI</h1>
         <button 
           onClick={() => setSidebarOpen(false)}
           className="p-2 hover:bg-white/5 rounded-lg transition-colors"

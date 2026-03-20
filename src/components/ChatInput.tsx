@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Paperclip, Mic, ArrowUp } from 'lucide-react';
+import { Paperclip, Mic, ArrowUp } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 interface ChatInputProps {
@@ -40,7 +40,7 @@ export const ChatInput = ({ onSend, isLoading }: ChatInputProps) => {
           value={content}
           onChange={(e) => setContent(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Message Lumina..."
+          placeholder="Message TaskFlow AI..."
           className="w-full bg-transparent border-none focus:ring-0 resize-none py-3 px-4 text-sm max-h-[200px] min-h-[44px]"
           rows={1}
         />
@@ -70,7 +70,7 @@ export const ChatInput = ({ onSend, isLoading }: ChatInputProps) => {
         </div>
       </div>
       <p className="text-[10px] text-center mt-3 text-brand-muted">
-        Lumina can make mistakes. Check important info.
+        TaskFlow AI can make mistakes. Check important info.
       </p>
     </div>
   );

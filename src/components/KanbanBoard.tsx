@@ -13,10 +13,15 @@ import {
   Plus, 
   Bell, 
   Settings,
-  ChevronDown
+  ChevronDown,
+  Sparkles
 } from 'lucide-react';
 
-export const KanbanBoard = () => {
+interface KanbanBoardProps {
+  onOpenAssistant?: () => void;
+}
+
+export const KanbanBoard = ({ onOpenAssistant }: KanbanBoardProps) => {
   const { 
     tasks, 
     columns, 
@@ -161,6 +166,15 @@ export const KanbanBoard = () => {
               className="bg-white/5 border border-brand-border rounded-xl pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-white/20 transition-all w-64"
             />
           </div>
+          {onOpenAssistant && (
+            <button
+              onClick={onOpenAssistant}
+              className="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold bg-white/5 border border-brand-border text-brand-muted hover:text-white hover:border-white/20 transition-all"
+            >
+              <Sparkles size={16} />
+              Assistant
+            </button>
+          )}
           <button className="p-2 hover:bg-white/5 rounded-xl text-brand-muted hover:text-white transition-all">
             <Bell size={20} />
           </button>
