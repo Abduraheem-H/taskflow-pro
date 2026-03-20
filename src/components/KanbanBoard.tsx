@@ -22,6 +22,14 @@ interface KanbanBoardProps {
   onOpenAssistant?: () => void;
 }
 
+type NotificationItem = {
+  id: string;
+  title: string;
+  detail: string;
+  time: string;
+  read: boolean;
+};
+
 const NAV_ITEMS = [
   { id: 'dashboard', label: 'Dashboard' },
   { id: 'my-tasks', label: 'My Tasks' },
@@ -47,6 +55,30 @@ const PROJECTS = [
   }
 ];
 
+const INITIAL_NOTIFICATIONS: NotificationItem[] = [
+  {
+    id: 'note-1',
+    title: 'Design review complete',
+    detail: 'UI check-in approved by Sarah.',
+    time: '2h ago',
+    read: false
+  },
+  {
+    id: 'note-2',
+    title: 'New task assigned',
+    detail: 'Implement onboarding tooltip set.',
+    time: '4h ago',
+    read: false
+  },
+  {
+    id: 'note-3',
+    title: 'Sprint planning',
+    detail: 'Team planning session tomorrow at 10 AM.',
+    time: 'Yesterday',
+    read: true
+  }
+];
+
 export const KanbanBoard = ({ onOpenAssistant }: KanbanBoardProps) => {
   const { 
     tasks, 
@@ -67,9 +99,12 @@ export const KanbanBoard = ({ onOpenAssistant }: KanbanBoardProps) => {
   const [activeNav, setActiveNav] = useState(NAV_ITEMS[0].id);
   const [activeProjectId, setActiveProjectId] = useState(PROJECTS[0].id);
   const [isProjectMenuOpen, setIsProjectMenuOpen] = useState(false);
+  const [notifications, setNotifications] = useState<NotificationItem[]>(INITIAL_NOTIFICATIONS);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
   const activeNavItem = NAV_ITEMS.find((item) => item.id === activeNav) ?? NAV_ITEMS[0];
   const activeProject = PROJECTS.find((project) => project.id === activeProjectId) ?? PROJECTS[0];
+  const unreadNotifications = notifications.filter((item) => !item.read).length;
 
   const onDragEnd = (result: DropResult) => {
     const { destination, source, draggableId } = result;
@@ -166,6 +201,16 @@ export const KanbanBoard = ({ onOpenAssistant }: KanbanBoardProps) => {
     setIsProjectMenuOpen(false);
   };
 
+  const markAllNotificationsRead = () => {
+    setNotifications((prev) => prev.map((item) => ({ ...item, read: true })));
+  };
+
+  const markNotificationRead = (id: string) => {
+    setNotifications((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, read: true } : item))
+    );
+  };
+
   const activeFilterCount = activePriorities.length;
 
   return (
@@ -218,9 +263,55 @@ export const KanbanBoard = ({ onOpenAssistant }: KanbanBoardProps) => {
               Assistant
             </button>
           )}
-          <button className="p-2 hover:bg-white/5 rounded-xl text-brand-muted hover:text-white transition-all">
-            <Bell size={20} />
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => setIsNotificationsOpen((prev) => !prev)}
+              className="p-2 hover:bg-white/5 rounded-xl text-brand-muted hover:text-white transition-all relative"
+            >
+              <Bell size={20} />
+              {unreadNotifications > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-white text-black text-[10px] flex items-center justify-center font-bold">
+                  {unreadNotifications}
+                </span>
+              )}
+            </button>
+
+            {isNotificationsOpen && (
+              <div className="absolute right-0 mt-2 w-80 bg-brand-surface border border-brand-border rounded-2xl shadow-xl z-30 overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-brand-border">
+                  <p className="text-sm font-semibold">Notifications</p>
+                  {unreadNotifications > 0 && (
+                    <button
+                      onClick={markAllNotificationsRead}
+                      className="text-xs text-brand-muted hover:text-white"
+                    >
+                      Mark all read
+                    </button>
+                  )}
+                </div>
+                <div className="max-h-72 overflow-y-auto">
+                  {notifications.length === 0 ? (
+                    <p className="px-4 py-6 text-sm text-brand-muted">You are all caught up.</p>
+                  ) : (
+                    notifications.map((item) => (
+                      <button
+                        key={item.id}
+                        onClick={() => markNotificationRead(item.id)}
+                        className={cn(
+                          "w-full text-left px-4 py-3 border-b border-brand-border/60 last:border-none transition-colors",
+                          item.read ? "text-brand-muted" : "text-white hover:bg-white/[0.03]"
+                        )}
+                      >
+                        <p className="text-sm font-semibold">{item.title}</p>
+                        <p className="text-xs opacity-70 mt-1">{item.detail}</p>
+                        <p className="text-[10px] opacity-50 mt-2">{item.time}</p>
+                      </button>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
           <button className="p-2 hover:bg-white/5 rounded-xl text-brand-muted hover:text-white transition-all">
             <Settings size={20} />
           </button>
