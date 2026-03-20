@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTaskStore } from '../store/useTaskStore';
 import { Priority } from '../types/task';
 import { X } from 'lucide-react';
@@ -7,18 +7,26 @@ import { motion, AnimatePresence } from 'motion/react';
 interface AddTaskModalProps {
   isOpen: boolean;
   onClose: () => void;
+  defaultColumnId?: string | null;
 }
 
-export const AddTaskModal = ({ isOpen, onClose }: AddTaskModalProps) => {
-  const { addTask } = useTaskStore();
+export const AddTaskModal = ({ isOpen, onClose, defaultColumnId }: AddTaskModalProps) => {
+  const { addTask, columns, columnOrder } = useTaskStore();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState<Priority>('medium');
+  const [columnId, setColumnId] = useState('');
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const fallbackColumn = defaultColumnId ?? columnOrder[0] ?? '';
+    setColumnId(fallbackColumn);
+  }, [isOpen, defaultColumnId, columnOrder]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (title.trim()) {
-      addTask('todo', title, description, priority);
+    if (title.trim() && columnId) {
+      addTask(columnId, title, description, priority);
       setTitle('');
       setDescription('');
       setPriority('medium');
@@ -76,6 +84,21 @@ export const AddTaskModal = ({ isOpen, onClose }: AddTaskModalProps) => {
               </div>
 
               <div className="space-y-1.5">
+                <label className="text-xs font-semibold uppercase tracking-wider opacity-40">Column</label>
+                <select
+                  value={columnId}
+                  onChange={(e) => setColumnId(e.target.value)}
+                  className="w-full bg-white/5 border border-brand-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-white/20 transition-all"
+                >
+                  {columnOrder.map((id) => (
+                    <option key={id} value={id} className="bg-brand-surface">
+                      {columns[id]?.title ?? 'Untitled'}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
                 <label className="text-xs font-semibold uppercase tracking-wider opacity-40">Priority</label>
                 <div className="flex gap-2">
                   {(['low', 'medium', 'high'] as Priority[]).map((p) => (
@@ -98,7 +121,7 @@ export const AddTaskModal = ({ isOpen, onClose }: AddTaskModalProps) => {
               <div className="pt-4">
                 <button
                   type="submit"
-                  disabled={!title.trim()}
+                  disabled={!title.trim() || !columnId}
                   className="w-full py-3 bg-white text-black rounded-xl font-bold hover:bg-white/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-white/5"
                 >
                   Create Task

@@ -29,6 +29,7 @@ export const KanbanBoard = () => {
   } = useTaskStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activeColumnId, setActiveColumnId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'board' | 'list'>('board');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [activePriorities, setActivePriorities] = useState<Priority[]>([]);
@@ -56,6 +57,11 @@ export const KanbanBoard = () => {
         draggableId
       );
     }
+  };
+
+  const openTaskModal = (columnId?: string) => {
+    setActiveColumnId(columnId ?? columnOrder[0] ?? null);
+    setIsModalOpen(true);
   };
 
   const normalizedQuery = searchQuery.toLowerCase().trim();
@@ -251,7 +257,7 @@ export const KanbanBoard = () => {
             </button>
           </div>
           <button 
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => openTaskModal()}
             className="flex items-center gap-2 px-4 py-2 bg-white text-black rounded-xl text-sm font-bold hover:bg-white/90 transition-all shadow-lg shadow-white/5"
           >
             <Plus size={18} />
@@ -277,7 +283,7 @@ export const KanbanBoard = () => {
                     id={column.id} 
                     title={column.title} 
                     tasks={columnTasks} 
-                    onAddTask={() => setIsModalOpen(true)}
+                    onAddTask={() => openTaskModal(column.id)}
                     onRename={handleRenameColumn}
                     onDelete={handleDeleteColumn}
                     canDelete={columnOrder.length > 1}
@@ -304,7 +310,14 @@ export const KanbanBoard = () => {
         )}
       </main>
 
-      <AddTaskModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      <AddTaskModal 
+        isOpen={isModalOpen} 
+        onClose={() => {
+          setIsModalOpen(false);
+          setActiveColumnId(null);
+        }}
+        defaultColumnId={activeColumnId}
+      />
     </div>
 
   );
