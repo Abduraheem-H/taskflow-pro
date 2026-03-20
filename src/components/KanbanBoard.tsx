@@ -16,10 +16,34 @@ import {
   ChevronDown,
   Sparkles
 } from 'lucide-react';
+import { cn } from '../lib/utils';
 
 interface KanbanBoardProps {
   onOpenAssistant?: () => void;
 }
+
+const NAV_ITEMS = [
+  {
+    id: 'dashboard',
+    label: 'Dashboard',
+    description: 'Track high-level progress and upcoming milestones.'
+  },
+  {
+    id: 'my-tasks',
+    label: 'My Tasks',
+    description: 'Focus on the work assigned to you across projects.'
+  },
+  {
+    id: 'projects',
+    label: 'Projects',
+    description: 'Switch between project roadmaps and active initiatives.'
+  },
+  {
+    id: 'team',
+    label: 'Team',
+    description: 'Review workloads and coordinate with teammates.'
+  }
+];
 
 export const KanbanBoard = ({ onOpenAssistant }: KanbanBoardProps) => {
   const { 
@@ -38,6 +62,9 @@ export const KanbanBoard = ({ onOpenAssistant }: KanbanBoardProps) => {
   const [viewMode, setViewMode] = useState<'board' | 'list'>('board');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [activePriorities, setActivePriorities] = useState<Priority[]>([]);
+  const [activeNav, setActiveNav] = useState(NAV_ITEMS[0].id);
+
+  const activeNavItem = NAV_ITEMS.find((item) => item.id === activeNav) ?? NAV_ITEMS[0];
 
   const onDragEnd = (result: DropResult) => {
     const { destination, source, draggableId } = result;
@@ -144,12 +171,18 @@ export const KanbanBoard = ({ onOpenAssistant }: KanbanBoardProps) => {
           </div>
           
           <nav className="hidden md:flex items-center gap-1">
-            {['Dashboard', 'My Tasks', 'Projects', 'Team'].map((item) => (
+            {NAV_ITEMS.map((item) => (
               <button 
-                key={item}
-                className="px-4 py-2 text-sm font-medium text-brand-muted hover:text-white transition-all rounded-lg hover:bg-white/5"
+                key={item.id}
+                onClick={() => setActiveNav(item.id)}
+                className={cn(
+                  "px-4 py-2 text-sm font-medium transition-all rounded-lg",
+                  activeNav === item.id
+                    ? "text-white bg-white/10"
+                    : "text-brand-muted hover:text-white hover:bg-white/5"
+                )}
               >
-                {item}
+                {item.label}
               </button>
             ))}
           </nav>
@@ -194,7 +227,7 @@ export const KanbanBoard = ({ onOpenAssistant }: KanbanBoardProps) => {
               <ChevronDown size={16} />
             </button>
           </div>
-          <p className="text-sm text-brand-muted">Manage and track your product development lifecycle.</p>
+          <p className="text-sm text-brand-muted">{activeNavItem.description}</p>
         </div>
 
         <div className="flex items-center gap-3">
