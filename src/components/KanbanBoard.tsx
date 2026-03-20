@@ -3,6 +3,7 @@ import { DragDropContext, DropResult } from '@hello-pangea/dnd';
 import { useTaskStore } from '../store/useTaskStore';
 import { Column } from './Column';
 import { AddTaskModal } from './AddTaskModal';
+import { TaskList } from './TaskList';
 import { 
   Search, 
   Filter, 
@@ -11,15 +12,14 @@ import {
   Plus, 
   Bell, 
   Settings,
-  Menu,
   ChevronDown
 } from 'lucide-react';
-import { motion } from 'motion/react';
 
 export const KanbanBoard = () => {
   const { tasks, columns, columnOrder, moveTask, reorderColumn } = useTaskStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<'board' | 'list'>('board');
 
   const onDragEnd = (result: DropResult) => {
     const { destination, source, draggableId } = result;
@@ -45,6 +45,21 @@ export const KanbanBoard = () => {
       );
     }
   };
+
+  const normalizedQuery = searchQuery.toLowerCase().trim();
+  const matchesSearch = (title: string, description: string) => {
+    if (!normalizedQuery) return true;
+    return (
+      title.toLowerCase().includes(normalizedQuery) ||
+      description.toLowerCase().includes(normalizedQuery)
+    );
+  };
+
+  const listTasks = columnOrder.flatMap((columnId) =>
+    columns[columnId].taskIds
+      .map((taskId) => tasks[taskId])
+      .filter((task) => matchesSearch(task.title, task.description))
+  );
 
   return (
     <div className="flex-1 flex flex-col h-screen bg-brand-bg overflow-hidden">
@@ -105,10 +120,24 @@ export const KanbanBoard = () => {
 
         <div className="flex items-center gap-3">
           <div className="flex items-center bg-white/5 border border-brand-border rounded-xl p-1">
-            <button className="p-1.5 bg-white/10 text-white rounded-lg shadow-sm">
+            <button 
+              onClick={() => setViewMode('board')}
+              className={
+                viewMode === 'board'
+                  ? "p-1.5 bg-white/10 text-white rounded-lg shadow-sm"
+                  : "p-1.5 text-brand-muted hover:text-white rounded-lg transition-all"
+              }
+            >
               <LayoutGrid size={18} />
             </button>
-            <button className="p-1.5 text-brand-muted hover:text-white rounded-lg transition-all">
+            <button 
+              onClick={() => setViewMode('list')}
+              className={
+                viewMode === 'list'
+                  ? "p-1.5 bg-white/10 text-white rounded-lg shadow-sm"
+                  : "p-1.5 text-brand-muted hover:text-white rounded-lg transition-all"
+              }
+            >
               <List size={18} />
             </button>
           </div>
@@ -122,38 +151,41 @@ export const KanbanBoard = () => {
         </div>
       </div>
 
-      {/* Kanban Board */}
+      {/* Board / List */}
       <main className="flex-1 overflow-x-auto overflow-y-hidden p-8 bg-[#080808]">
-        <DragDropContext onDragEnd={onDragEnd}>
-          <div className="flex gap-8 h-full min-w-max">
-            {columnOrder.map((columnId) => {
-              const column = columns[columnId];
-              const columnTasks = column.taskIds
-                .map((taskId) => tasks[taskId])
-                .filter(task => 
-                  task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                  task.description.toLowerCase().includes(searchQuery.toLowerCase())
-                );
+        {viewMode === 'board' ? (
+          <DragDropContext onDragEnd={onDragEnd}>
+            <div className="flex gap-8 h-full min-w-max">
+              {columnOrder.map((columnId) => {
+                const column = columns[columnId];
+                const columnTasks = column.taskIds
+                  .map((taskId) => tasks[taskId])
+                  .filter(task => matchesSearch(task.title, task.description));
 
-              return (
-                <Column 
-                  key={column.id} 
-                  id={column.id} 
-                  title={column.title} 
-                  tasks={columnTasks} 
-                />
-              );
-            })}
-            
-            {/* Add Column Placeholder */}
-            <div className="w-80 shrink-0 h-full">
-              <button className="w-full h-12 border border-dashed border-brand-border rounded-2xl flex items-center justify-center gap-2 text-brand-muted hover:text-white hover:border-white/20 transition-all group">
-                <Plus size={18} className="group-hover:scale-110 transition-transform" />
-                <span className="text-sm font-medium">Add Section</span>
-              </button>
+                return (
+                  <Column 
+                    key={column.id} 
+                    id={column.id} 
+                    title={column.title} 
+                    tasks={columnTasks} 
+                  />
+                );
+              })}
+              
+              {/* Add Column Placeholder */}
+              <div className="w-80 shrink-0 h-full">
+                <button className="w-full h-12 border border-dashed border-brand-border rounded-2xl flex items-center justify-center gap-2 text-brand-muted hover:text-white hover:border-white/20 transition-all group">
+                  <Plus size={18} className="group-hover:scale-110 transition-transform" />
+                  <span className="text-sm font-medium">Add Section</span>
+                </button>
+              </div>
             </div>
+          </DragDropContext>
+        ) : (
+          <div className="bg-brand-surface border border-brand-border rounded-2xl overflow-hidden">
+            <TaskList tasks={listTasks} columns={columns} />
           </div>
-        </DragDropContext>
+        )}
       </main>
 
       <AddTaskModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
