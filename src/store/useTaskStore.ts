@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
-import { Task, Priority, Column, ColumnId } from '../types/task';
+import { Task, Priority, Column, ColumnId, ProjectId, AssigneeId } from '../types/task';
+import { WORKSPACE_PROJECTS, WORKSPACE_ASSIGNEES } from '../data/workspace';
 
 interface TaskState {
   tasks: Record<string, Task>;
@@ -9,7 +10,15 @@ interface TaskState {
   columnOrder: ColumnId[];
   
   // Actions
-  addTask: (columnId: ColumnId, title: string, description: string, priority: Priority) => void;
+  addTask: (
+    columnId: ColumnId,
+    title: string,
+    description: string,
+    priority: Priority,
+    assignee: AssigneeId | undefined,
+    dueDate: string | undefined,
+    projectId: ProjectId
+  ) => void;
   updateTask: (taskId: string, updates: Partial<Task>) => void;
   deleteTask: (taskId: string, columnId: ColumnId) => void;
   moveTask: (
@@ -25,6 +34,9 @@ interface TaskState {
   deleteColumn: (columnId: ColumnId) => void;
 }
 
+const defaultProjectId = WORKSPACE_PROJECTS[0]?.id ?? 'roadmap';
+const defaultAssignee = WORKSPACE_ASSIGNEES[0] ?? 'You';
+
 const initialTasks: Record<string, Task> = {
   'task-1': {
     id: 'task-1',
@@ -33,7 +45,10 @@ const initialTasks: Record<string, Task> = {
     status: 'todo',
     priority: 'high',
     createdAt: Date.now(),
-    tags: ['design', 'core']
+    tags: ['design', 'core'],
+    projectId: defaultProjectId,
+    assignee: defaultAssignee,
+    dueDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7).toISOString()
   },
   'task-2': {
     id: 'task-2',
@@ -42,7 +57,10 @@ const initialTasks: Record<string, Task> = {
     status: 'in-progress',
     priority: 'medium',
     createdAt: Date.now(),
-    tags: ['auth', 'backend']
+    tags: ['auth', 'backend'],
+    projectId: defaultProjectId,
+    assignee: WORKSPACE_ASSIGNEES[1],
+    dueDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 14).toISOString()
   }
 };
 
@@ -60,7 +78,7 @@ export const useTaskStore = create<TaskState>()(
       columns: initialColumns,
       columnOrder: ['todo', 'in-progress', 'review', 'done'],
 
-      addTask: (columnId, title, description, priority) => {
+      addTask: (columnId, title, description, priority, assignee, dueDate, projectId) => {
         const id = uuidv4();
         const newTask: Task = {
           id,
@@ -69,7 +87,10 @@ export const useTaskStore = create<TaskState>()(
           status: columnId,
           priority,
           createdAt: Date.now(),
-          tags: []
+          tags: [],
+          projectId,
+          assignee,
+          dueDate: dueDate || undefined
         };
 
         set((state) => ({

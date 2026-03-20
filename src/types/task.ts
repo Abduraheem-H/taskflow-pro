@@ -1,5 +1,7 @@
 export type Priority = 'low' | 'medium' | 'high';
 export type ColumnId = string;
+export type ProjectId = string;
+export type AssigneeId = string;
 
 export interface Task {
   id: string;
@@ -9,6 +11,9 @@ export interface Task {
   priority: Priority;
   createdAt: number;
   tags: string[];
+  projectId: ProjectId;
+  assignee?: AssigneeId;
+  dueDate?: string;
 }
 
 export interface Column {

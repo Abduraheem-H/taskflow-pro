@@ -14,6 +14,13 @@ const priorityStyles: Record<Priority, string> = {
   high: 'bg-rose-500/10 text-rose-500 border-rose-500/20'
 };
 
+const getInitials = (name?: string) => {
+  if (!name) return '--';
+  const parts = name.split(' ').filter(Boolean);
+  const initials = parts.map((part) => part[0]).join('');
+  return initials.slice(0, 2).toUpperCase();
+};
+
 export const TaskList = ({ tasks, columns }: TaskListProps) => {
   if (tasks.length === 0) {
     return (
@@ -26,11 +33,12 @@ export const TaskList = ({ tasks, columns }: TaskListProps) => {
   return (
     <div className="w-full">
       <div className="grid grid-cols-12 gap-4 px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-brand-muted border-b border-brand-border">
-        <div className="col-span-5">Task</div>
+        <div className="col-span-4">Task</div>
         <div className="col-span-2">Status</div>
         <div className="col-span-2">Priority</div>
         <div className="col-span-2">Tags</div>
-        <div className="col-span-1 text-right">Created</div>
+        <div className="col-span-1 text-center">Owner</div>
+        <div className="col-span-1 text-right">Due</div>
       </div>
 
       <div className="divide-y divide-brand-border/60">
@@ -39,7 +47,7 @@ export const TaskList = ({ tasks, columns }: TaskListProps) => {
             key={task.id}
             className="grid grid-cols-12 gap-4 px-4 py-3 items-center hover:bg-white/[0.02] transition-colors"
           >
-            <div className="col-span-5">
+            <div className="col-span-4">
               <p className="text-sm font-medium line-clamp-1">{task.title}</p>
               <p className="text-xs text-brand-muted line-clamp-1 mt-1">
                 {task.description}
@@ -72,8 +80,13 @@ export const TaskList = ({ tasks, columns }: TaskListProps) => {
                 <span className="text-xs text-brand-muted">—</span>
               )}
             </div>
+            <div className="col-span-1 flex justify-center">
+              <div className="w-7 h-7 rounded-full bg-white/10 border border-white/10 text-[10px] font-semibold flex items-center justify-center">
+                {getInitials(task.assignee)}
+              </div>
+            </div>
             <div className="col-span-1 text-right text-xs text-brand-muted">
-              {format(task.createdAt, 'MMM d')}
+              {task.dueDate ? format(new Date(task.dueDate), 'MMM d') : '—'}
             </div>
           </div>
         ))}

@@ -2,7 +2,7 @@ import React from 'react';
 import { Draggable } from '@hello-pangea/dnd';
 import { Task, Priority } from '../types/task';
 import { cn } from '../lib/utils';
-import { Clock, Tag, MoreHorizontal } from 'lucide-react';
+import { Clock, MoreHorizontal, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface TaskCardProps {
@@ -16,7 +16,16 @@ const priorityColors: Record<Priority, string> = {
   high: 'bg-rose-500/10 text-rose-500 border-rose-500/20'
 };
 
+const getInitials = (name?: string) => {
+  if (!name) return '??';
+  const parts = name.split(' ').filter(Boolean);
+  const initials = parts.map((part) => part[0]).join('');
+  return initials.slice(0, 2).toUpperCase();
+};
+
 export const TaskCard = ({ task, index }: TaskCardProps) => {
+  const dueDateLabel = task.dueDate ? format(new Date(task.dueDate), 'MMM d') : null;
+
   return (
     <Draggable draggableId={task.id} index={index}>
       {(provided, snapshot) => (
@@ -47,18 +56,23 @@ export const TaskCard = ({ task, index }: TaskCardProps) => {
           </p>
           
           <div className="flex items-center justify-between pt-3 border-t border-brand-border/50">
-            <div className="flex items-center gap-1.5 text-[10px] text-brand-muted">
-              <Clock size={12} />
-              <span>{format(task.createdAt, 'MMM d')}</span>
+            <div className="flex items-center gap-2 text-[10px] text-brand-muted">
+              <span className="flex items-center gap-1.5">
+                <Clock size={12} />
+                <span>{format(task.createdAt, 'MMM d')}</span>
+              </span>
+              {dueDateLabel && (
+                <span className="flex items-center gap-1.5 text-brand-muted">
+                  <Calendar size={12} />
+                  <span>{dueDateLabel}</span>
+                </span>
+              )}
             </div>
             
-            <div className="flex -space-x-1.5">
-              {[1, 2].map((i) => (
-                <div 
-                  key={i}
-                  className="w-5 h-5 rounded-full border border-brand-surface bg-gradient-to-br from-indigo-500 to-purple-500"
-                />
-              ))}
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-full border border-brand-surface bg-gradient-to-br from-indigo-500 to-purple-500 text-[10px] font-bold text-white flex items-center justify-center">
+                {getInitials(task.assignee)}
+              </div>
             </div>
           </div>
         </div>
