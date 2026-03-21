@@ -18,6 +18,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { motion } from 'framer-motion';
 
 interface KanbanBoardProps {
   onOpenAssistant?: () => void;
@@ -310,12 +311,17 @@ export const KanbanBoard = ({ onOpenAssistant }: KanbanBoardProps) => {
   const activeFilterCount = activePriorities.length;
 
   return (
-    <div className="flex-1 flex flex-col h-screen bg-brand-bg overflow-hidden">
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: 'easeOut' }}
+      className="flex-1 flex flex-col h-full app-surface overflow-hidden"
+    >
       {/* Top Navbar */}
-      <header className="h-16 border-b border-brand-border flex items-center px-8 justify-between bg-brand-bg/50 backdrop-blur-md z-20">
+      <header className="h-16 border-b border-white/10 flex items-center px-8 justify-between bg-brand-surface/50 backdrop-blur-xl">
         <div className="flex items-center gap-8">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-lg shadow-black/20">
               <div className="w-4 h-4 bg-black rounded-sm" />
             </div>
             <h1 className="text-lg font-bold tracking-tight">TaskFlow</h1>
@@ -329,7 +335,7 @@ export const KanbanBoard = ({ onOpenAssistant }: KanbanBoardProps) => {
                 className={cn(
                   "px-4 py-2 text-sm font-medium transition-all rounded-lg",
                   activeNav === item.id
-                    ? "text-white bg-white/10"
+                    ? "text-white bg-white/10 shadow-sm"
                     : "text-brand-muted hover:text-white hover:bg-white/5"
                 )}
               >
@@ -347,13 +353,13 @@ export const KanbanBoard = ({ onOpenAssistant }: KanbanBoardProps) => {
               placeholder="Search tasks..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-white/5 border border-brand-border rounded-xl pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-white/20 transition-all w-64"
+              className="bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-white/30 transition-all w-64"
             />
           </div>
           {onOpenAssistant && (
             <button
               onClick={onOpenAssistant}
-              className="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold bg-white/5 border border-brand-border text-brand-muted hover:text-white hover:border-white/20 transition-all"
+              className="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold bg-white/5 border border-white/10 text-brand-muted hover:text-white hover:border-white/30 transition-all"
             >
               <Sparkles size={16} />
               Assistant
@@ -373,8 +379,8 @@ export const KanbanBoard = ({ onOpenAssistant }: KanbanBoardProps) => {
             </button>
 
             {isNotificationsOpen && (
-              <div className="absolute right-0 mt-2 w-80 bg-brand-surface border border-brand-border rounded-2xl shadow-xl z-30 overflow-hidden">
-                <div className="flex items-center justify-between px-4 py-3 border-b border-brand-border">
+              <div className="absolute right-0 mt-2 w-80 bg-brand-surface/90 border border-white/10 rounded-2xl shadow-xl z-30 overflow-hidden backdrop-blur-xl">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
                   <p className="text-sm font-semibold">Notifications</p>
                   {unreadNotifications > 0 && (
                     <button
@@ -394,8 +400,8 @@ export const KanbanBoard = ({ onOpenAssistant }: KanbanBoardProps) => {
                         key={item.id}
                         onClick={() => markNotificationRead(item.id)}
                         className={cn(
-                          "w-full text-left px-4 py-3 border-b border-brand-border/60 last:border-none transition-colors",
-                          item.read ? "text-brand-muted" : "text-white hover:bg-white/[0.03]"
+                          "w-full text-left px-4 py-3 border-b border-white/5 last:border-none transition-colors",
+                          item.read ? "text-brand-muted" : "text-white hover:bg-white/[0.04]"
                         )}
                       >
                         <p className="text-sm font-semibold">{item.title}</p>
@@ -417,8 +423,8 @@ export const KanbanBoard = ({ onOpenAssistant }: KanbanBoardProps) => {
             </button>
 
             {isSettingsOpen && (
-              <div className="absolute right-0 mt-2 w-56 bg-brand-surface border border-brand-border rounded-2xl shadow-xl z-30 overflow-hidden">
-                <div className="px-4 py-3 border-b border-brand-border">
+              <div className="absolute right-0 mt-2 w-56 bg-brand-surface/90 border border-white/10 rounded-2xl shadow-xl z-30 overflow-hidden backdrop-blur-xl">
+                <div className="px-4 py-3 border-b border-white/10">
                   <p className="text-sm font-semibold">Workspace</p>
                 </div>
                 <div className="p-2">
@@ -459,12 +465,12 @@ export const KanbanBoard = ({ onOpenAssistant }: KanbanBoardProps) => {
               </div>
             )}
           </div>
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 border border-white/10" />
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-cyan-400 border border-white/10 shadow-lg shadow-indigo-500/30" />
         </div>
       </header>
 
       {/* Sub-header */}
-      <div className="px-8 py-6 border-b border-brand-border flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-brand-bg">
+      <div className="px-8 py-6 border-b border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-brand-surface/40 backdrop-blur-xl">
         <div>
           <div className="flex items-center gap-3 mb-1 relative" ref={projectRef}>
             <button
@@ -487,7 +493,7 @@ export const KanbanBoard = ({ onOpenAssistant }: KanbanBoardProps) => {
             </span>
 
             {isProjectMenuOpen && (
-              <div className="absolute left-0 top-12 w-64 bg-brand-surface border border-brand-border rounded-2xl shadow-xl p-2 z-30">
+              <div className="absolute left-0 top-12 w-64 bg-brand-surface/95 border border-white/10 rounded-2xl shadow-xl p-2 z-30 backdrop-blur-xl">
                 {WORKSPACE_PROJECTS.map((project) => (
                   <button
                     key={project.id}
@@ -515,7 +521,7 @@ export const KanbanBoard = ({ onOpenAssistant }: KanbanBoardProps) => {
           <div className="relative" ref={filterRef}>
             <button
               onClick={toggleFilterMenu}
-              className="flex items-center gap-2 px-3 py-2 text-sm border border-brand-border rounded-xl bg-white/5 text-brand-muted hover:text-white hover:border-white/20 transition-all"
+              className="flex items-center gap-2 px-3 py-2 text-sm border border-white/10 rounded-xl bg-white/5 text-brand-muted hover:text-white hover:border-white/30 transition-all"
             >
               <Filter size={16} />
               <span>Filter</span>
@@ -527,7 +533,7 @@ export const KanbanBoard = ({ onOpenAssistant }: KanbanBoardProps) => {
             </button>
 
             {isFilterOpen && (
-              <div className="absolute right-0 mt-2 w-56 bg-brand-surface border border-brand-border rounded-2xl shadow-xl p-3 z-30">
+              <div className="absolute right-0 mt-2 w-56 bg-brand-surface/95 border border-white/10 rounded-2xl shadow-xl p-3 z-30 backdrop-blur-xl">
                 <div className="text-[10px] font-semibold uppercase tracking-widest text-brand-muted mb-2">
                   Priority
                 </div>
@@ -562,7 +568,7 @@ export const KanbanBoard = ({ onOpenAssistant }: KanbanBoardProps) => {
             )}
           </div>
 
-          <div className="flex items-center bg-white/5 border border-brand-border rounded-xl p-1">
+          <div className="flex items-center bg-white/5 border border-white/10 rounded-xl p-1">
             <button 
               onClick={() => setViewMode('board')}
               className={
@@ -586,7 +592,7 @@ export const KanbanBoard = ({ onOpenAssistant }: KanbanBoardProps) => {
           </div>
           <button 
             onClick={() => openTaskModal()}
-            className="flex items-center gap-2 px-4 py-2 bg-white text-black rounded-xl text-sm font-bold hover:bg-white/90 transition-all shadow-lg shadow-white/5"
+            className="flex items-center gap-2 px-4 py-2 bg-white text-black rounded-xl text-sm font-bold hover:bg-white/90 transition-all shadow-lg shadow-white/10"
           >
             <Plus size={18} />
             <span>Add Task</span>
@@ -595,47 +601,51 @@ export const KanbanBoard = ({ onOpenAssistant }: KanbanBoardProps) => {
       </div>
 
       {/* Board / List */}
-      <main className="flex-1 overflow-x-auto overflow-y-hidden p-8 bg-[#080808]">
-        {viewMode === 'board' ? (
-          <DragDropContext onDragEnd={onDragEnd}>
-            <div className="flex gap-8 h-full min-w-max">
-              {columnOrder.map((columnId) => {
-                const column = columns[columnId];
-                const columnTasks = column.taskIds
-                  .map((taskId) => tasks[taskId])
-                  .filter((task) => matchesFilters(task.title, task.description, task.priority, task.projectId, task.assignee));
+      <main className="flex-1 overflow-hidden p-6">
+        <div className="h-full rounded-3xl border border-white/10 bg-white/[0.03] shadow-[0_20px_60px_rgba(0,0,0,0.35)] overflow-hidden">
+          {viewMode === 'board' ? (
+            <DragDropContext onDragEnd={onDragEnd}>
+              <div className="h-full overflow-x-auto overflow-y-hidden p-6">
+                <div className="flex gap-8 h-full min-w-max">
+                  {columnOrder.map((columnId) => {
+                    const column = columns[columnId];
+                    const columnTasks = column.taskIds
+                      .map((taskId) => tasks[taskId])
+                      .filter((task) => matchesFilters(task.title, task.description, task.priority, task.projectId, task.assignee));
 
-                return (
-                  <Column 
-                    key={column.id} 
-                    id={column.id} 
-                    title={column.title} 
-                    tasks={columnTasks} 
-                    onAddTask={() => openTaskModal(column.id)}
-                    onRename={handleRenameColumn}
-                    onDelete={handleDeleteColumn}
-                    canDelete={columnOrder.length > 1}
-                  />
-                );
-              })}
-              
-              {/* Add Column Placeholder */}
-              <div className="w-80 shrink-0 h-full">
-                <button
-                  onClick={handleAddColumn}
-                  className="w-full h-12 border border-dashed border-brand-border rounded-2xl flex items-center justify-center gap-2 text-brand-muted hover:text-white hover:border-white/20 transition-all group"
-                >
-                  <Plus size={18} className="group-hover:scale-110 transition-transform" />
-                  <span className="text-sm font-medium">Add Section</span>
-                </button>
+                    return (
+                      <Column 
+                        key={column.id} 
+                        id={column.id} 
+                        title={column.title} 
+                        tasks={columnTasks} 
+                        onAddTask={() => openTaskModal(column.id)}
+                        onRename={handleRenameColumn}
+                        onDelete={handleDeleteColumn}
+                        canDelete={columnOrder.length > 1}
+                      />
+                    );
+                  })}
+                  
+                  {/* Add Column Placeholder */}
+                  <div className="w-80 shrink-0 h-full">
+                    <button
+                      onClick={handleAddColumn}
+                      className="w-full h-12 border border-dashed border-white/20 rounded-2xl flex items-center justify-center gap-2 text-brand-muted hover:text-white hover:border-white/40 transition-all group"
+                    >
+                      <Plus size={18} className="group-hover:scale-110 transition-transform" />
+                      <span className="text-sm font-medium">Add Section</span>
+                    </button>
+                  </div>
+                </div>
               </div>
+            </DragDropContext>
+          ) : (
+            <div className="h-full overflow-y-auto p-6">
+              <TaskList tasks={listTasks} columns={columns} />
             </div>
-          </DragDropContext>
-        ) : (
-          <div className="bg-brand-surface border border-brand-border rounded-2xl overflow-hidden">
-            <TaskList tasks={listTasks} columns={columns} />
-          </div>
-        )}
+          )}
+        </div>
       </main>
 
       <AddTaskModal 
@@ -647,7 +657,7 @@ export const KanbanBoard = ({ onOpenAssistant }: KanbanBoardProps) => {
         defaultColumnId={activeColumnId}
         defaultProjectId={activeProjectId}
       />
-    </div>
+    </motion.div>
 
   );
 };

@@ -9,9 +9,9 @@ interface TaskListProps {
 }
 
 const priorityStyles: Record<Priority, string> = {
-  low: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
-  medium: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
-  high: 'bg-rose-500/10 text-rose-500 border-rose-500/20'
+  low: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+  medium: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+  high: 'bg-rose-500/10 text-rose-400 border-rose-500/20'
 };
 
 const getInitials = (name?: string) => {
@@ -32,7 +32,7 @@ export const TaskList = ({ tasks, columns }: TaskListProps) => {
 
   return (
     <div className="w-full">
-      <div className="grid grid-cols-12 gap-4 px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-brand-muted border-b border-brand-border">
+      <div className="grid grid-cols-12 gap-4 px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-brand-muted border-b border-white/10">
         <div className="col-span-4">Task</div>
         <div className="col-span-2">Status</div>
         <div className="col-span-2">Priority</div>
@@ -41,11 +41,11 @@ export const TaskList = ({ tasks, columns }: TaskListProps) => {
         <div className="col-span-1 text-right">Due</div>
       </div>
 
-      <div className="divide-y divide-brand-border/60">
+      <div className="divide-y divide-white/5">
         {tasks.map((task) => (
           <div
             key={task.id}
-            className="grid grid-cols-12 gap-4 px-4 py-3 items-center hover:bg-white/[0.02] transition-colors"
+            className="grid grid-cols-12 gap-4 px-4 py-3 items-center hover:bg-white/[0.04] transition-colors"
           >
             <div className="col-span-4">
               <p className="text-sm font-medium line-clamp-1">{task.title}</p>

@@ -1,19 +1,107 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --color-brand-bg: #050505;
-  --color-brand-surface: #121212;
-  --color-brand-border: rgba(255, 255, 255, 0.1);
-  --color-brand-accent: #ffffff;
-  --color-brand-muted: #888888;
-  
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --color-brand-bg: #06060f;
+  --color-brand-surface: #0f111c;
+  --color-brand-border: rgba(255, 255, 255, 0.08);
+  --color-brand-accent: #7ad7ff;
+  --color-brand-muted: #9aa3b2;
+
+  --font-sans: "Space Grotesk", "Manrope", sans-serif;
 }
 
 @layer base {
   body {
-    @apply bg-brand-bg text-white antialiased;
+    @apply text-white antialiased;
   }
+}
+
+.app-shell {
+  background:
+    radial-gradient(1200px circle at 10% 15%, rgba(64, 132, 255, 0.18), transparent 45%),
+    radial-gradient(900px circle at 85% 20%, rgba(94, 255, 224, 0.12), transparent 50%),
+    radial-gradient(700px circle at 50% 100%, rgba(255, 140, 120, 0.08), transparent 55%),
+    linear-gradient(180deg, #05060b 0%, #070711 60%, #05060b 100%);
+}
+
+.app-surface {
+  position: relative;
+  background: rgba(6, 8, 14, 0.72);
+  backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  isolation: isolate;
+}
+
+.app-surface::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(600px circle at 10% 10%, rgba(122, 215, 255, 0.12), transparent 60%),
+    radial-gradient(500px circle at 90% 20%, rgba(138, 255, 196, 0.08), transparent 55%),
+    radial-gradient(700px circle at 50% 100%, rgba(255, 186, 146, 0.08), transparent 60%);
+  opacity: 0.8;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.app-surface > * {
+  position: relative;
+  z-index: 1;
+}
+
+.aurora-orb {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(80px);
+  opacity: 0.55;
+  mix-blend-mode: screen;
+}
+
+.aurora-orb--one {
+  width: 520px;
+  height: 520px;
+  background: radial-gradient(circle at 30% 30%, rgba(120, 200, 255, 0.8), transparent 70%);
+  top: -10%;
+  left: -8%;
+}
+
+.aurora-orb--two {
+  width: 480px;
+  height: 480px;
+  background: radial-gradient(circle at 30% 30%, rgba(120, 255, 219, 0.65), transparent 70%);
+  top: -5%;
+  right: -6%;
+}
+
+.aurora-orb--three {
+  width: 560px;
+  height: 560px;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 180, 140, 0.55), transparent 70%);
+  bottom: -20%;
+  left: 20%;
+}
+
+.grid-layer {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 140px 140px;
+  opacity: 0.08;
+  mask-image: radial-gradient(circle at top, black 40%, transparent 70%);
+}
+
+.noise-layer {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.15) 1px, transparent 1px);
+  background-size: 3px 3px;
+  opacity: 0.04;
+  mix-blend-mode: soft-light;
 }
 
 /* Custom Scrollbar */
@@ -26,10 +114,10 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.12);
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.24);
 }

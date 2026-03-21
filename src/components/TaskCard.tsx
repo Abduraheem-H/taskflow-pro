@@ -11,9 +11,9 @@ interface TaskCardProps {
 }
 
 const priorityColors: Record<Priority, string> = {
-  low: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
-  medium: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
-  high: 'bg-rose-500/10 text-rose-500 border-rose-500/20'
+  low: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+  medium: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+  high: 'bg-rose-500/10 text-rose-400 border-rose-500/20'
 };
 
 const getInitials = (name?: string) => {
@@ -34,8 +34,8 @@ export const TaskCard = ({ task, index }: TaskCardProps) => {
           {...provided.draggableProps}
           {...provided.dragHandleProps}
           className={cn(
-            "group bg-brand-surface border border-brand-border rounded-xl p-4 mb-3 transition-all hover:border-white/20 hover:shadow-lg",
-            snapshot.isDragging ? "shadow-2xl border-white/30 rotate-2" : ""
+            "group bg-white/[0.04] border border-white/10 rounded-xl p-4 mb-3 transition-all hover:border-white/30 hover:-translate-y-0.5 hover:shadow-[0_12px_30px_rgba(0,0,0,0.35)]",
+            snapshot.isDragging ? "shadow-2xl border-white/40 rotate-2" : ""
           )}
         >
           <div className="flex items-start justify-between mb-2">
@@ -55,14 +55,14 @@ export const TaskCard = ({ task, index }: TaskCardProps) => {
             {task.description}
           </p>
           
-          <div className="flex items-center justify-between pt-3 border-t border-brand-border/50">
+          <div className="flex items-center justify-between pt-3 border-t border-white/10">
             <div className="flex items-center gap-2 text-[10px] text-brand-muted">
               <span className="flex items-center gap-1.5">
                 <Clock size={12} />
                 <span>{format(task.createdAt, 'MMM d')}</span>
               </span>
               {dueDateLabel && (
-                <span className="flex items-center gap-1.5 text-brand-muted">
+                <span className="flex items-center gap-1.5">
                   <Calendar size={12} />
                   <span>{dueDateLabel}</span>
                 </span>
@@ -70,7 +70,7 @@ export const TaskCard = ({ task, index }: TaskCardProps) => {
             </div>
             
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-full border border-brand-surface bg-gradient-to-br from-indigo-500 to-purple-500 text-[10px] font-bold text-white flex items-center justify-center">
+              <div className="w-6 h-6 rounded-full border border-white/10 bg-gradient-to-br from-indigo-500 to-cyan-400 text-[10px] font-bold text-white flex items-center justify-center shadow-md shadow-indigo-500/30">
                 {getInitials(task.assignee)}
               </div>
             </div>

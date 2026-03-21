@@ -19,7 +19,7 @@ export const Sidebar = () => {
   return (
     <div 
       className={cn(
-        "h-screen bg-brand-surface border-r border-brand-border transition-all duration-300 flex flex-col",
+        "h-full bg-brand-surface/70 border-r border-white/10 transition-all duration-300 flex flex-col backdrop-blur-xl",
         isSidebarOpen ? "w-72" : "w-0 overflow-hidden border-none"
       )}
     >
@@ -36,7 +36,7 @@ export const Sidebar = () => {
       <div className="px-4 mb-4">
         <button 
           onClick={() => createNewSession()}
-          className="w-full flex items-center gap-2 px-4 py-2.5 bg-white text-black rounded-xl font-medium hover:bg-white/90 transition-colors"
+          className="w-full flex items-center gap-2 px-4 py-2.5 bg-white text-black rounded-xl font-medium hover:bg-white/90 transition-colors shadow-lg shadow-white/10"
         >
           <Plus size={18} />
           <span>New Chat</span>
@@ -75,7 +75,7 @@ export const Sidebar = () => {
         ))}
       </div>
 
-      <div className="p-4 border-t border-brand-border space-y-4">
+      <div className="p-4 border-t border-white/10 space-y-4">
         <button 
           onClick={() => {
             if (confirm("Are you sure you want to clear all chat history?")) {
@@ -88,7 +88,7 @@ export const Sidebar = () => {
           <span>Clear All History</span>
         </button>
         <div className="flex items-center gap-3 px-2">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500" />
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-cyan-400 shadow-md shadow-indigo-500/30" />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium truncate">User Account</p>
             <p className="text-xs text-brand-muted truncate">Pro Plan</p>

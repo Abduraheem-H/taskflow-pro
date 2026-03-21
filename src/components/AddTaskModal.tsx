@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useTaskStore } from '../store/useTaskStore';
 import { Priority } from '../types/task';
 import { X } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { WORKSPACE_ASSIGNEES, WORKSPACE_PROJECTS } from '../data/workspace';
 
 interface AddTaskModalProps {
@@ -67,7 +67,8 @@ export const AddTaskModal = ({
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="relative w-full max-w-md bg-brand-surface border border-brand-border rounded-2xl shadow-2xl p-6"
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+            className="relative w-full max-w-md bg-brand-surface/90 border border-white/10 rounded-2xl shadow-2xl shadow-black/40 p-6 backdrop-blur"
           >
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold tracking-tight">Create New Task</h3>
@@ -85,7 +86,7 @@ export const AddTaskModal = ({
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="What needs to be done?"
-                  className="w-full bg-white/5 border border-brand-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-white/20 transition-all"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-white/30 transition-all"
                 />
               </div>
 
@@ -96,7 +97,7 @@ export const AddTaskModal = ({
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Add some details..."
                   rows={3}
-                  className="w-full bg-white/5 border border-brand-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-white/20 transition-all resize-none"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-white/30 transition-all resize-none"
                 />
               </div>
 
@@ -106,7 +107,7 @@ export const AddTaskModal = ({
                   <select
                     value={projectId}
                     onChange={(e) => setProjectId(e.target.value)}
-                    className="w-full bg-white/5 border border-brand-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-white/20 transition-all"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-white/30 transition-all"
                   >
                     {WORKSPACE_PROJECTS.map((project) => (
                       <option key={project.id} value={project.id} className="bg-brand-surface">
@@ -121,7 +122,7 @@ export const AddTaskModal = ({
                   <select
                     value={columnId}
                     onChange={(e) => setColumnId(e.target.value)}
-                    className="w-full bg-white/5 border border-brand-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-white/20 transition-all"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-white/30 transition-all"
                   >
                     {columnOrder.map((id) => (
                       <option key={id} value={id} className="bg-brand-surface">
@@ -138,7 +139,7 @@ export const AddTaskModal = ({
                   <select
                     value={assignee}
                     onChange={(e) => setAssignee(e.target.value)}
-                    className="w-full bg-white/5 border border-brand-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-white/20 transition-all"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-white/30 transition-all"
                   >
                     {WORKSPACE_ASSIGNEES.map((name) => (
                       <option key={name} value={name} className="bg-brand-surface">
@@ -154,7 +155,7 @@ export const AddTaskModal = ({
                     type="date"
                     value={dueDate}
                     onChange={(e) => setDueDate(e.target.value)}
-                    className="w-full bg-white/5 border border-brand-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-white/20 transition-all"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-white/30 transition-all"
                   />
                 </div>
               </div>
@@ -170,7 +171,7 @@ export const AddTaskModal = ({
                       className={`flex-1 py-2 rounded-xl text-xs font-bold uppercase tracking-wider border transition-all ${
                         priority === p 
                           ? 'bg-white text-black border-white' 
-                          : 'bg-white/5 border-brand-border text-brand-muted hover:bg-white/10'
+                          : 'bg-white/5 border-white/10 text-brand-muted hover:bg-white/10'
                       }`}
                     >
                       {p}

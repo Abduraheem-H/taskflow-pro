@@ -66,7 +66,7 @@ export const Column = ({
           </button>
 
           {isMenuOpen && (
-            <div className="absolute right-0 top-9 w-40 bg-brand-surface border border-brand-border rounded-xl shadow-xl p-1 z-20">
+            <div className="absolute right-0 top-9 w-40 bg-brand-surface/90 border border-white/10 rounded-xl shadow-xl p-1 z-20 backdrop-blur-xl">
               <button
                 onClick={() => {
                   setIsMenuOpen(false);
@@ -107,14 +107,14 @@ export const Column = ({
             {...provided.droppableProps}
             className={cn(
               "flex-1 px-2 py-1 rounded-2xl transition-all min-h-[150px]",
-              snapshot.isDraggingOver ? "bg-white/[0.02]" : "bg-transparent"
+              snapshot.isDraggingOver ? "bg-white/[0.03]" : "bg-transparent"
             )}
           >
             {tasks.map((task, index) => (
               <TaskCard key={task.id} task={task} index={index} />
             ))}
             {tasks.length === 0 && (
-              <div className="px-3 py-4 text-xs text-brand-muted border border-dashed border-brand-border/60 rounded-xl">
+              <div className="px-3 py-4 text-xs text-brand-muted border border-dashed border-white/15 rounded-xl bg-white/[0.02]">
                 No tasks yet. Add a new task to get started.
               </div>
             )}

@@ -1,28 +1,29 @@
-import React, { useRef, useEffect } from 'react';
-import { useChatStore } from '../store/useChatStore';
-import { MessageBubble } from './MessageBubble';
-import { ChatInput } from './ChatInput';
-import { generateChatResponse } from '../services/gemini';
-import { useMutation } from '@tanstack/react-query';
-import { PanelLeftOpen, Sparkles, ArrowLeft } from 'lucide-react';\nimport { motion } from 'motion/react';
+import React, { useRef, useEffect } from "react";
+import { useChatStore } from "../store/useChatStore";
+import { MessageBubble } from "./MessageBubble";
+import { ChatInput } from "./ChatInput";
+import { generateChatResponse } from "../services/gemini";
+import { useMutation } from "@tanstack/react-query";
+import { PanelLeftOpen, Sparkles, ArrowLeft } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface ChatWindowProps {
   onBack?: () => void;
 }
 
 export const ChatWindow = ({ onBack }: ChatWindowProps) => {
-  const { 
-    sessions, 
-    currentSessionId, 
-    addMessage, 
-    isSidebarOpen, 
+  const {
+    sessions,
+    currentSessionId,
+    addMessage,
+    isSidebarOpen,
     setSidebarOpen,
-    createNewSession 
+    createNewSession,
   } = useChatStore();
-  
+
   const scrollRef = useRef<HTMLDivElement>(null);
-  
-  const currentSession = sessions.find(s => s.id === currentSessionId);
+
+  const currentSession = sessions.find((s) => s.id === currentSessionId);
 
   const mutation = useMutation({
     mutationFn: async (messages: any[]) => {
@@ -32,9 +33,9 @@ export const ChatWindow = ({ onBack }: ChatWindowProps) => {
       if (currentSessionId) {
         addMessage(currentSessionId, {
           id: crypto.randomUUID(),
-          role: 'assistant',
+          role: "assistant",
           content: data,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         });
       }
     },
@@ -42,30 +43,30 @@ export const ChatWindow = ({ onBack }: ChatWindowProps) => {
       if (currentSessionId) {
         addMessage(currentSessionId, {
           id: crypto.randomUUID(),
-          role: 'assistant',
+          role: "assistant",
           content: `**Error:** ${error.message || "Failed to generate response. Please check your API key and connection."}`,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         });
       }
-    }
+    },
   });
 
   const handleSend = async (content: string) => {
     let sessionId = currentSessionId;
-    
+
     if (!sessionId) {
       sessionId = createNewSession();
     }
 
     const userMessage = {
       id: crypto.randomUUID(),
-      role: 'user' as const,
+      role: "user" as const,
       content,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
 
     addMessage(sessionId, userMessage);
-    
+
     const updatedMessages = [...(currentSession?.messages || []), userMessage];
     mutation.mutate(updatedMessages);
   };
@@ -77,12 +78,17 @@ export const ChatWindow = ({ onBack }: ChatWindowProps) => {
   }, [currentSession?.messages, mutation.isPending]);
 
   return (
-    <div className="flex-1 flex flex-col h-screen bg-brand-bg relative overflow-hidden">
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+      className="flex-1 flex flex-col h-full app-surface relative overflow-hidden"
+    >
       {/* Header */}
-      <header className="h-16 border-b border-brand-border flex items-center px-6 justify-between bg-brand-bg/50 backdrop-blur-md z-10">
+      <header className="h-16 border-b border-white/10 flex items-center px-6 justify-between bg-brand-surface/50 backdrop-blur-xl">
         <div className="flex items-center gap-4">
           {onBack && (
-            <button 
+            <button
               onClick={onBack}
               className="p-2 hover:bg-white/5 rounded-lg transition-colors"
             >
@@ -90,7 +96,7 @@ export const ChatWindow = ({ onBack }: ChatWindowProps) => {
             </button>
           )}
           {!isSidebarOpen && (
-            <button 
+            <button
               onClick={() => setSidebarOpen(true)}
               className="p-2 hover:bg-white/5 rounded-lg transition-colors"
             >
@@ -109,20 +115,17 @@ export const ChatWindow = ({ onBack }: ChatWindowProps) => {
       </header>
 
       {/* Messages */}
-      <div 
-        ref={scrollRef}
-        className="flex-1 overflow-y-auto scroll-smooth"
-      >
+      <div ref={scrollRef} className="flex-1 overflow-y-auto scroll-smooth">
         {!currentSession || currentSession.messages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center p-8 text-center">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center mb-6 border border-white/10"
             >
               <Sparkles size={32} className="text-white" />
             </motion.div>
-            <motion.h3 
+            <motion.h3
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
@@ -130,27 +133,28 @@ export const ChatWindow = ({ onBack }: ChatWindowProps) => {
             >
               How can I help you today?
             </motion.h3>
-            <motion.p 
+            <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
               className="text-brand-muted max-w-md text-sm leading-relaxed"
             >
-              TaskFlow AI is your workspace companion. Ask questions, generate content, or explore ideas for your projects.
+              TaskFlow AI is your workspace companion. Ask questions, generate
+              content, or explore ideas for your projects.
             </motion.p>
-            
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-12 w-full max-w-2xl">
               {[
                 "Write a professional email for a job application",
                 "Explain quantum computing in simple terms",
                 "Create a 7-day workout plan for beginners",
-                "Help me debug a React useEffect loop"
+                "Help me debug a React useEffect loop",
               ].map((suggestion, i) => (
                 <motion.button
                   key={suggestion}
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.3 + (i * 0.1) }}
+                  transition={{ delay: 0.3 + i * 0.1 }}
                   onClick={() => handleSend(suggestion)}
                   className="p-4 bg-white/5 border border-white/10 rounded-2xl text-left text-xs hover:bg-white/10 hover:border-white/20 transition-all"
                 >
@@ -164,7 +168,7 @@ export const ChatWindow = ({ onBack }: ChatWindowProps) => {
             {currentSession.messages.map((msg) => (
               <MessageBubble key={msg.id} message={msg} />
             ))}
-            
+
             {mutation.isPending && (
               <div className="flex gap-4 p-6 bg-white/[0.02]">
                 <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0 animate-pulse">
@@ -184,9 +188,9 @@ export const ChatWindow = ({ onBack }: ChatWindowProps) => {
       </div>
 
       {/* Input */}
-      <div className="bg-gradient-to-t from-brand-bg via-brand-bg to-transparent pt-12">
+      <div className="bg-gradient-to-t from-black/30 via-transparent to-transparent pt-10">
         <ChatInput onSend={handleSend} isLoading={mutation.isPending} />
       </div>
-    </div>
+    </motion.div>
   );
 };
