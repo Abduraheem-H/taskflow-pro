@@ -3,13 +3,14 @@ import { useTaskStore } from '../store/useTaskStore';
 import { Priority } from '../types/task';
 import { X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { WORKSPACE_ASSIGNEES, WORKSPACE_PROJECTS } from '../data/workspace';
+import { TASK_TEMPLATES, WORKSPACE_ASSIGNEES, WORKSPACE_PROJECTS } from '../data/workspace';
 
 interface AddTaskModalProps {
   isOpen: boolean;
   onClose: () => void;
   defaultColumnId?: string | null;
   defaultProjectId?: string | null;
+  onCreated?: (title: string) => void;
 }
 
 const defaultAssignee = WORKSPACE_ASSIGNEES[0] ?? 'You';
@@ -18,7 +19,8 @@ export const AddTaskModal = ({
   isOpen,
   onClose,
   defaultColumnId,
-  defaultProjectId
+  defaultProjectId,
+  onCreated
 }: AddTaskModalProps) => {
   const { addTask, columns, columnOrder } = useTaskStore();
   const [title, setTitle] = useState('');
@@ -29,6 +31,8 @@ export const AddTaskModal = ({
   const [assignee, setAssignee] = useState(defaultAssignee);
   const [dueDate, setDueDate] = useState('');
   const [tagInput, setTagInput] = useState('');
+  const [templateId, setTemplateId] = useState('');
+  const [checklist, setChecklist] = useState<string[]>([]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -40,7 +44,21 @@ export const AddTaskModal = ({
     setAssignee(defaultAssignee);
     setDueDate('');
     setTagInput('');
+    setTemplateId('');
+    setChecklist([]);
   }, [isOpen, defaultColumnId, defaultProjectId, columnOrder]);
+
+  const handleTemplateSelect = (nextTemplateId: string) => {
+    setTemplateId(nextTemplateId);
+    const template = TASK_TEMPLATES.find((item) => item.id === nextTemplateId);
+    if (!template) return;
+
+    setTitle(template.title);
+    setDescription(template.taskDescription);
+    setPriority(template.priority);
+    setTagInput(template.tags.join(', '));
+    setChecklist(template.checklist);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,12 +67,20 @@ export const AddTaskModal = ({
         .split(',')
         .map((tag) => tag.trim())
         .filter(Boolean);
+      const checklistItems = checklist.map((label) => ({
+        id: crypto.randomUUID(),
+        label,
+        completed: false
+      }));
 
-      addTask(columnId, title.trim(), description.trim(), priority, assignee, dueDate || undefined, projectId, tags);
+      addTask(columnId, title.trim(), description.trim(), priority, assignee, dueDate || undefined, projectId, tags, checklistItems);
+      onCreated?.(title.trim());
       setTitle('');
       setDescription('');
       setPriority('medium');
       setTagInput('');
+      setTemplateId('');
+      setChecklist([]);
       onClose();
     }
   };
@@ -89,6 +115,27 @@ export const AddTaskModal = ({
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold uppercase text-slate-500">Template</label>
+                <select
+                  value={templateId}
+                  onChange={(e) => handleTemplateSelect(e.target.value)}
+                  className="w-full rounded-md border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-950 outline-none transition-all focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
+                >
+                  <option value="">Start from blank</option>
+                  {TASK_TEMPLATES.map((template) => (
+                    <option key={template.id} value={template.id}>
+                      {template.name}
+                    </option>
+                  ))}
+                </select>
+                {templateId && (
+                  <p className="text-xs leading-5 text-slate-500">
+                    {TASK_TEMPLATES.find((template) => template.id === templateId)?.description}
+                  </p>
+                )}
+              </div>
+
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold uppercase text-slate-500">Title</label>
                 <input
