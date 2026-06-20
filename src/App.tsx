@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
@@ -10,6 +10,7 @@ import {
   KanbanSquare,
   List,
   Plus,
+  RotateCcw,
   Search,
   Sparkles
 } from 'lucide-react';
@@ -22,7 +23,9 @@ import { TimelineView } from './components/TimelineView';
 import { TaskDetailDrawer } from './components/TaskDetailDrawer';
 import { ColumnDialog } from './components/ColumnDialog';
 import { ConfirmDialog } from './components/ConfirmDialog';
+import { ToastMessage, ToastStack } from './components/ToastStack';
 import { useTaskStore } from './store/useTaskStore';
+import { AssistantAction } from './types/chat';
 import { Priority, Task } from './types/task';
 import { WORKSPACE_PROJECTS } from './data/workspace';
 import { cn } from './lib/utils';
@@ -54,12 +57,16 @@ export default function App() {
     tasks,
     columns,
     columnOrder,
+    addTask,
+    updateTask,
     addColumn,
     renameColumn,
     deleteColumn,
-    deleteTask
+    deleteTask,
+    resetWorkspace
   } = useTaskStore();
 
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [activeView, setActiveView] = useState<WorkspaceView>('overview');
   const [activeProjectId, setActiveProjectId] = useState(WORKSPACE_PROJECTS[0]?.id ?? 'roadmap');
   const [searchQuery, setSearchQuery] = useState('');
@@ -72,11 +79,16 @@ export default function App() {
   const [columnDialog, setColumnDialog] = useState<{ mode: 'add' | 'rename'; columnId?: string } | null>(null);
   const [deleteColumnId, setDeleteColumnId] = useState<string | null>(null);
   const [deleteTaskId, setDeleteTaskId] = useState<string | null>(null);
+  const [bulkDeleteIds, setBulkDeleteIds] = useState<string[]>([]);
+  const [pendingAssistantAction, setPendingAssistantAction] = useState<AssistantAction | null>(null);
+  const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
   const activeProject = WORKSPACE_PROJECTS.find((project) => project.id === activeProjectId) ?? WORKSPACE_PROJECTS[0];
   const selectedTask = selectedTaskId ? tasks[selectedTaskId] ?? null : null;
   const deleteColumnTarget = deleteColumnId ? columns[deleteColumnId] : null;
   const deleteTaskTarget = deleteTaskId ? tasks[deleteTaskId] : null;
+  const bulkDeleteTargets = bulkDeleteIds.map((taskId) => tasks[taskId]).filter(Boolean);
 
   const allTasks = useMemo(
     () =>
@@ -175,10 +187,56 @@ export default function App() {
     'Draft a short risk and blocker note from this board.'
   ];
 
+  const pushToast = (toast: Omit<ToastMessage, 'id'>) => {
+    const id = crypto.randomUUID();
+    setToasts((current) => [...current, { id, ...toast }]);
+    window.setTimeout(() => {
+      setToasts((current) => current.filter((item) => item.id !== id));
+    }, 4200);
+  };
+
   const openCreateTask = (columnId?: string) => {
     setCreateColumnId(columnId ?? columnOrder[0] ?? null);
     setIsCreateOpen(true);
   };
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      const isTyping =
+        target?.tagName === 'INPUT' ||
+        target?.tagName === 'TEXTAREA' ||
+        target?.tagName === 'SELECT' ||
+        target?.isContentEditable;
+
+      if (event.key === 'Escape') {
+        setSelectedTaskId(null);
+        setAssistantOpen(false);
+        setAlertsOpen(false);
+        setColumnDialog(null);
+        setDeleteColumnId(null);
+        setDeleteTaskId(null);
+        setBulkDeleteIds([]);
+        setPendingAssistantAction(null);
+        return;
+      }
+
+      if (isTyping) return;
+
+      if (event.key === '/') {
+        event.preventDefault();
+        searchInputRef.current?.focus();
+      }
+
+      if (event.key.toLowerCase() === 'n') {
+        event.preventDefault();
+        openCreateTask();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [columnOrder]);
 
   const togglePriority = (priority: Priority) => {
     setActivePriorities((current) =>
@@ -188,13 +246,146 @@ export default function App() {
     );
   };
 
+  const buildAssistantActions = (prompt: string, response: string): AssistantAction[] => {
+    const firstColumnId = columnOrder[0] ?? 'todo';
+    const openTask = visibleTasks.find((task) => !isTaskDone(task));
+    const priorityCandidate = visibleTasks.find((task) => !isTaskDone(task) && task.priority !== 'high') ?? openTask;
+    const statusDraft = [
+      `${activeProject?.name ?? 'Project'} status update`,
+      '',
+      `Visible work: ${visibleTasks.length} task${visibleTasks.length === 1 ? '' : 's'}.`,
+      alerts.length > 0 ? `Attention: ${alerts.map((alert) => alert.title).join(', ')}.` : 'No urgent alerts right now.',
+      '',
+      response.slice(0, 800)
+    ].join('\n');
+
+    const actions: AssistantAction[] = [
+      {
+        id: crypto.randomUUID(),
+        type: 'create-task',
+        label: 'Create follow-up task',
+        description: 'Add a medium-priority task from this assistant request.',
+        mutates: true,
+        payload: {
+          title: `Follow up: ${prompt.slice(0, 48)}`,
+          description: `Created from assistant prompt: ${prompt}`,
+          priority: 'medium',
+          status: firstColumnId,
+          projectId: activeProjectId,
+          tags: ['assistant']
+        }
+      },
+      {
+        id: crypto.randomUUID(),
+        type: 'copy-status',
+        label: 'Copy status update',
+        description: 'Copy a concise project update to your clipboard.',
+        mutates: false,
+        payload: {
+          content: statusDraft
+        }
+      }
+    ];
+
+    if (priorityCandidate) {
+      actions.splice(1, 0, {
+        id: crypto.randomUUID(),
+        type: 'update-priority',
+        label: `Mark "${priorityCandidate.title}" high priority`,
+        description: 'Promote this visible task for focused execution.',
+        mutates: true,
+        payload: {
+          taskId: priorityCandidate.id,
+          priority: 'high'
+        }
+      });
+    }
+
+    return actions;
+  };
+
+  const handleAssistantAction = async (action: AssistantAction) => {
+    if (action.mutates) {
+      setPendingAssistantAction(action);
+      return;
+    }
+
+    if (action.type === 'copy-status' && action.payload.content) {
+      if (!navigator.clipboard) {
+        pushToast({
+          title: 'Clipboard unavailable',
+          description: 'Your browser did not allow clipboard access.',
+          tone: 'info'
+        });
+        return;
+      }
+
+      await navigator.clipboard.writeText(action.payload.content);
+      pushToast({
+        title: 'Status update copied',
+        description: 'The assistant draft is ready to paste.',
+        tone: 'success'
+      });
+    }
+  };
+
+  const handleConfirmAssistantAction = () => {
+    if (!pendingAssistantAction) return;
+
+    if (pendingAssistantAction.type === 'create-task') {
+      addTask(
+        pendingAssistantAction.payload.status ?? columnOrder[0],
+        pendingAssistantAction.payload.title ?? 'Assistant follow-up',
+        pendingAssistantAction.payload.description ?? '',
+        pendingAssistantAction.payload.priority ?? 'medium',
+        'You',
+        undefined,
+        pendingAssistantAction.payload.projectId ?? activeProjectId,
+        pendingAssistantAction.payload.tags ?? ['assistant']
+      );
+      pushToast({
+        title: 'Assistant task created',
+        description: pendingAssistantAction.payload.title,
+        tone: 'success'
+      });
+    }
+
+    if (
+      pendingAssistantAction.type === 'update-priority' &&
+      pendingAssistantAction.payload.taskId &&
+      pendingAssistantAction.payload.priority
+    ) {
+      updateTask(pendingAssistantAction.payload.taskId, {
+        priority: pendingAssistantAction.payload.priority
+      });
+      pushToast({
+        title: 'Priority updated',
+        description: 'Assistant action applied after confirmation.',
+        tone: 'success'
+      });
+    }
+
+    setPendingAssistantAction(null);
+  };
+
+  const handleBulkUpdate = (taskIds: string[], updates: Partial<Task>) => {
+    taskIds.forEach((taskId) => updateTask(taskId, updates));
+    pushToast({
+      title: 'Bulk update applied',
+      description: `${taskIds.length} task${taskIds.length === 1 ? '' : 's'} updated.`,
+      tone: 'success'
+    });
+  };
+
   const handleColumnDialogSubmit = (title: string) => {
     if (columnDialog?.mode === 'add') {
       addColumn(title);
+      pushToast({ title: 'Section added', description: title, tone: 'success' });
     }
 
     if (columnDialog?.mode === 'rename' && columnDialog.columnId) {
       renameColumn(columnDialog.columnId, title);
+      pushToast({ title: 'Section renamed', description: title, tone: 'success' });
     }
 
     setColumnDialog(null);
@@ -202,17 +393,44 @@ export default function App() {
 
   const handleConfirmDeleteColumn = () => {
     if (!deleteColumnId) return;
+    const title = columns[deleteColumnId]?.title;
     deleteColumn(deleteColumnId);
     setDeleteColumnId(null);
+    pushToast({ title: 'Section deleted', description: title, tone: 'success' });
   };
 
   const handleConfirmDeleteTask = () => {
     if (!deleteTaskId) return;
+    const title = tasks[deleteTaskId]?.title;
     deleteTask(deleteTaskId);
     if (selectedTaskId === deleteTaskId) {
       setSelectedTaskId(null);
     }
     setDeleteTaskId(null);
+    pushToast({ title: 'Task deleted', description: title, tone: 'success' });
+  };
+
+  const handleConfirmBulkDelete = () => {
+    bulkDeleteIds.forEach((taskId) => deleteTask(taskId));
+    pushToast({
+      title: 'Tasks deleted',
+      description: `${bulkDeleteIds.length} task${bulkDeleteIds.length === 1 ? '' : 's'} removed.`,
+      tone: 'success'
+    });
+    setBulkDeleteIds([]);
+  };
+
+  const handleConfirmReset = () => {
+    resetWorkspace();
+    setSearchQuery('');
+    setActivePriorities([]);
+    setSelectedTaskId(null);
+    setResetConfirmOpen(false);
+    pushToast({
+      title: 'Sample workspace restored',
+      description: 'Tasks and sections are back to the starter data.',
+      tone: 'success'
+    });
   };
 
   const activeViewLabel = VIEW_ITEMS.find((item) => item.id === activeView)?.label ?? 'Overview';
@@ -278,6 +496,16 @@ export default function App() {
                 ))}
               </div>
             </div>
+
+            <div className="mt-auto border-t border-slate-200 p-3">
+              <button
+                onClick={() => setResetConfirmOpen(true)}
+                className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-950"
+              >
+                <RotateCcw size={16} />
+                Reset sample data
+              </button>
+            </div>
           </aside>
 
           <div className="flex min-w-0 flex-1 flex-col">
@@ -311,6 +539,7 @@ export default function App() {
                   <div className="relative min-w-[220px] flex-1 lg:flex-none">
                     <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                     <input
+                      ref={searchInputRef}
                       value={searchQuery}
                       onChange={(event) => setSearchQuery(event.target.value)}
                       placeholder="Search tasks, tags, owners"
@@ -438,7 +667,13 @@ export default function App() {
               )}
 
               {activeView === 'list' && (
-                <TaskList tasks={visibleTasks} columns={columns} onOpenTask={setSelectedTaskId} />
+                <TaskList
+                  tasks={visibleTasks}
+                  columns={columns}
+                  onOpenTask={setSelectedTaskId}
+                  onBulkUpdate={handleBulkUpdate}
+                  onBulkDelete={setBulkDeleteIds}
+                />
               )}
 
               {activeView === 'timeline' && (
@@ -454,6 +689,8 @@ export default function App() {
                   onClose={() => setAssistantOpen(false)}
                   workspaceContext={workspaceContext}
                   suggestions={assistantSuggestions}
+                  buildActions={buildAssistantActions}
+                  onApplyAction={handleAssistantAction}
                 />
               </div>
             )}
@@ -491,6 +728,13 @@ export default function App() {
           onClose={() => setIsCreateOpen(false)}
           defaultColumnId={createColumnId}
           defaultProjectId={activeProjectId}
+          onCreated={(title) =>
+            pushToast({
+              title: 'Task created',
+              description: title,
+              tone: 'success'
+            })
+          }
         />
 
         <TaskDetailDrawer
@@ -498,6 +742,20 @@ export default function App() {
           isOpen={Boolean(selectedTask)}
           onClose={() => setSelectedTaskId(null)}
           onRequestDelete={setDeleteTaskId}
+          onSaved={(title) =>
+            pushToast({
+              title: 'Task updated',
+              description: title,
+              tone: 'success'
+            })
+          }
+          onCommentAdded={(title) =>
+            pushToast({
+              title: 'Comment added',
+              description: title,
+              tone: 'success'
+            })
+          }
         />
 
         <ColumnDialog
@@ -532,6 +790,42 @@ export default function App() {
           confirmLabel="Delete task"
           onCancel={() => setDeleteTaskId(null)}
           onConfirm={handleConfirmDeleteTask}
+        />
+
+        <ConfirmDialog
+          isOpen={bulkDeleteTargets.length > 0}
+          title="Delete selected tasks?"
+          description={`${bulkDeleteTargets.length} selected task${bulkDeleteTargets.length === 1 ? '' : 's'} will be removed from this workspace.`}
+          confirmLabel="Delete tasks"
+          onCancel={() => setBulkDeleteIds([])}
+          onConfirm={handleConfirmBulkDelete}
+        />
+
+        <ConfirmDialog
+          isOpen={Boolean(pendingAssistantAction)}
+          title="Apply assistant action?"
+          description={
+            pendingAssistantAction
+              ? `${pendingAssistantAction.label}. This will change workspace task data.`
+              : ''
+          }
+          confirmLabel="Apply action"
+          onCancel={() => setPendingAssistantAction(null)}
+          onConfirm={handleConfirmAssistantAction}
+        />
+
+        <ConfirmDialog
+          isOpen={resetConfirmOpen}
+          title="Reset sample workspace?"
+          description="This restores the starter tasks and sections for the local workspace."
+          confirmLabel="Reset data"
+          onCancel={() => setResetConfirmOpen(false)}
+          onConfirm={handleConfirmReset}
+        />
+
+        <ToastStack
+          toasts={toasts}
+          onDismiss={(id) => setToasts((current) => current.filter((toast) => toast.id !== id))}
         />
       </div>
     </QueryClientProvider>
