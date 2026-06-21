@@ -6,17 +6,20 @@ import { generateChatResponse } from "../services/gemini";
 import { useMutation } from "@tanstack/react-query";
 import { Sparkles, X } from "lucide-react";
 import { motion } from "framer-motion";
-import { Message } from "../types/chat";
+import { AssistantAction, Message } from "../types/chat";
 
 interface ChatWindowProps {
   onClose?: () => void;
   workspaceContext?: string;
   suggestions?: string[];
+  buildActions?: (prompt: string, response: string) => AssistantAction[];
+  onApplyAction?: (action: AssistantAction) => void;
 }
 
 type ChatRequest = {
   sessionId: string;
   messages: Message[];
+  prompt: string;
 };
 
 const DEFAULT_SUGGESTIONS = [
@@ -26,7 +29,13 @@ const DEFAULT_SUGGESTIONS = [
   "Suggest what I should do first today."
 ];
 
-export const ChatWindow = ({ onClose, workspaceContext, suggestions = DEFAULT_SUGGESTIONS }: ChatWindowProps) => {
+export const ChatWindow = ({
+  onClose,
+  workspaceContext,
+  suggestions = DEFAULT_SUGGESTIONS,
+  buildActions,
+  onApplyAction
+}: ChatWindowProps) => {
   const {
     sessions,
     currentSessionId,
@@ -49,6 +58,7 @@ export const ChatWindow = ({ onClose, workspaceContext, suggestions = DEFAULT_SU
           role: "assistant",
           content: data,
           timestamp: Date.now(),
+          actions: buildActions?.(variables.prompt, data),
         });
       }
     },
@@ -82,7 +92,7 @@ export const ChatWindow = ({ onClose, workspaceContext, suggestions = DEFAULT_SU
 
     const sessionMessages = sessions.find((session) => session.id === sessionId)?.messages ?? currentSession?.messages ?? [];
     const updatedMessages = [...sessionMessages, userMessage];
-    mutation.mutate({ sessionId, messages: updatedMessages });
+    mutation.mutate({ sessionId, messages: updatedMessages, prompt: content });
   };
 
   useEffect(() => {
@@ -144,7 +154,7 @@ export const ChatWindow = ({ onClose, workspaceContext, suggestions = DEFAULT_SU
               transition={{ delay: 0.2 }}
               className="mt-2 max-w-sm text-sm leading-6 text-slate-600"
             >
-              Use the assistant for status updates, task breakdowns, prioritization, and planning notes.
+              Use the assistant for status updates, task breakdowns, prioritization, and planning notes. Task changes always ask for confirmation first.
             </motion.p>
 
             <div className="mt-6 grid gap-2">
@@ -165,7 +175,7 @@ export const ChatWindow = ({ onClose, workspaceContext, suggestions = DEFAULT_SU
         ) : (
           <div className="w-full py-2">
             {currentSession.messages.map((msg) => (
-              <MessageBubble key={msg.id} message={msg} />
+              <MessageBubble key={msg.id} message={msg} onApplyAction={onApplyAction} />
             ))}
 
             {mutation.isPending && (

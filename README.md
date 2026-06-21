@@ -1,4 +1,4 @@
-# TaskFlow Pro
+ï»¿# TaskFlow Pro
 
 TaskFlow Pro is a premium Kanban workspace for planning, prioritizing, and shipping work. It combines drag-and-drop boards, rich task metadata, and a clean interface designed for focused execution.
 
@@ -19,6 +19,7 @@ TaskFlow Pro is a premium Kanban workspace for planning, prioritizing, and shipp
 - Search and filter across tasks
 - Persistent board state
 - Optional AI assistant module
+- Assistant action cards for confirmed task updates and status drafts
 
 ## Screenshots
 
@@ -38,6 +39,6 @@ Add screenshots to `./screenshots` and update references:
 
 ## Scripts
 
-- `npm run dev` — start the Vite dev server
-- `npm run build` — build for production
-- `npm run preview` — preview the production build
+- `npm run dev` - start the Vite dev server
+- `npm run build` - build for production
+- `npm run preview` - preview the production build
