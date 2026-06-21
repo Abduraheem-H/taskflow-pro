@@ -38,6 +38,7 @@ export const TaskDetailDrawer = ({ task, isOpen, onClose, onRequestDelete, onSav
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
   const [checklistInput, setChecklistInput] = useState('');
   const [commentInput, setCommentInput] = useState('');
+  const taskId = task?.id;
 
   useEffect(() => {
     if (!task || !isOpen) return;
@@ -53,7 +54,7 @@ export const TaskDetailDrawer = ({ task, isOpen, onClose, onRequestDelete, onSav
     setChecklist(task.checklist ?? []);
     setChecklistInput('');
     setCommentInput('');
-  }, [task, isOpen]);
+  }, [taskId, isOpen]);
 
   const checklistProgress = useMemo(() => {
     if (checklist.length === 0) return 0;

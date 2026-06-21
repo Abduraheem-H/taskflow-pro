@@ -49,5 +49,7 @@ Add screenshots to `./screenshots` and update references:
 - `npm run build` — build for production
 - `npm run preview` — preview the production build
 - `npm run start` — serve the production app with the `/api/chat` proxy
+- `npm run test:e2e` — run Playwright end-to-end tests
+- `npm run test:e2e:ui` — open the Playwright test runner UI
 - `npm run smoke` — check the production bundle and assistant proxy contract
-- `npm run verify` — run typecheck, build, and smoke checks
+- `npm run verify` — run typecheck, build, smoke, and Playwright checks
