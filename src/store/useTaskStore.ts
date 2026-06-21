@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
-import { Task, Priority, Column, ColumnId, ProjectId, AssigneeId } from '../types/task';
+import { ChecklistItem, Task, Priority, Column, ColumnId, ProjectId, AssigneeId } from '../types/task';
 import { WORKSPACE_PROJECTS, WORKSPACE_ASSIGNEES } from '../data/workspace';
 
 interface TaskState {
@@ -18,9 +18,11 @@ interface TaskState {
     assignee: AssigneeId | undefined,
     dueDate: string | undefined,
     projectId: ProjectId,
-    tags?: string[]
+    tags?: string[],
+    checklist?: ChecklistItem[]
   ) => void;
   updateTask: (taskId: string, updates: Partial<Task>) => void;
+  addTaskComment: (taskId: string, content: string, author?: AssigneeId) => void;
   deleteTask: (taskId: string, columnId?: ColumnId) => void;
   moveTask: (
     sourceColumnId: ColumnId,
@@ -33,6 +35,7 @@ interface TaskState {
   addColumn: (title: string) => ColumnId;
   renameColumn: (columnId: ColumnId, title: string) => void;
   deleteColumn: (columnId: ColumnId) => void;
+  resetWorkspace: () => void;
 }
 
 const defaultProjectId = WORKSPACE_PROJECTS[0]?.id ?? 'roadmap';
@@ -49,6 +52,10 @@ const initialTasks: Record<string, Task> = {
     updatedAt: Date.now(),
     tags: ['design', 'core'],
     checklist: [],
+    comments: [],
+    activity: [
+      { id: 'activity-1', label: 'Task created from sample workspace', createdAt: Date.now() }
+    ],
     projectId: defaultProjectId,
     assignee: defaultAssignee,
     dueDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7).toISOString()
@@ -63,6 +70,10 @@ const initialTasks: Record<string, Task> = {
     updatedAt: Date.now(),
     tags: ['auth', 'backend'],
     checklist: [],
+    comments: [],
+    activity: [
+      { id: 'activity-2', label: 'Task created from sample workspace', createdAt: Date.now() }
+    ],
     projectId: defaultProjectId,
     assignee: WORKSPACE_ASSIGNEES[1],
     dueDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 14).toISOString()
@@ -80,7 +91,15 @@ const normalizeTask = (task: Task): Task => ({
   ...task,
   updatedAt: task.updatedAt ?? task.createdAt ?? Date.now(),
   tags: Array.isArray(task.tags) ? task.tags : [],
-  checklist: Array.isArray(task.checklist) ? task.checklist : []
+  checklist: Array.isArray(task.checklist) ? task.checklist : [],
+  comments: Array.isArray(task.comments) ? task.comments : [],
+  activity: Array.isArray(task.activity) ? task.activity : []
+});
+
+const createActivity = (label: string) => ({
+  id: uuidv4(),
+  label,
+  createdAt: Date.now()
 });
 
 export const useTaskStore = create<TaskState>()(
@@ -90,7 +109,7 @@ export const useTaskStore = create<TaskState>()(
       columns: initialColumns,
       columnOrder: ['todo', 'in-progress', 'review', 'done'],
 
-      addTask: (columnId, title, description, priority, assignee, dueDate, projectId, tags = []) => {
+      addTask: (columnId, title, description, priority, assignee, dueDate, projectId, tags = [], checklist = []) => {
         const id = uuidv4();
         const now = Date.now();
         const newTask: Task = {
@@ -102,7 +121,9 @@ export const useTaskStore = create<TaskState>()(
           createdAt: now,
           updatedAt: now,
           tags,
-          checklist: [],
+          checklist,
+          comments: [],
+          activity: [{ id: uuidv4(), label: 'Task created', createdAt: now }],
           projectId,
           assignee,
           dueDate: dueDate || undefined
@@ -127,11 +148,34 @@ export const useTaskStore = create<TaskState>()(
 
           const nextStatus = updates.status ?? currentTask.status;
           const shouldMove = updates.status && updates.status !== currentTask.status && state.columns[nextStatus];
+          const activityLabels = [
+            updates.status && updates.status !== currentTask.status
+              ? `Moved to ${state.columns[nextStatus]?.title ?? nextStatus}`
+              : '',
+            updates.priority && updates.priority !== currentTask.priority
+              ? `Priority changed to ${updates.priority}`
+              : '',
+            updates.assignee && updates.assignee !== currentTask.assignee
+              ? `Assigned to ${updates.assignee}`
+              : '',
+            updates.dueDate !== undefined && updates.dueDate !== currentTask.dueDate
+              ? updates.dueDate ? 'Due date updated' : 'Due date cleared'
+              : '',
+            updates.title && updates.title !== currentTask.title ? 'Title updated' : '',
+            updates.description !== undefined && updates.description !== currentTask.description ? 'Description updated' : '',
+            updates.tags && updates.tags.join(',') !== currentTask.tags.join(',') ? 'Tags updated' : '',
+            updates.checklist && updates.checklist !== currentTask.checklist ? 'Checklist updated' : ''
+          ].filter(Boolean);
+
           const updatedTask = normalizeTask({
             ...currentTask,
             ...updates,
             status: shouldMove ? nextStatus : currentTask.status,
-            updatedAt: Date.now()
+            updatedAt: Date.now(),
+            activity: [
+              ...(currentTask.activity ?? []),
+              ...activityLabels.map((label) => createActivity(label))
+            ]
           });
 
           if (!shouldMove) {
@@ -161,6 +205,37 @@ export const useTaskStore = create<TaskState>()(
               [taskId]: updatedTask
             },
             columns: nextColumns
+          };
+        });
+      },
+
+      addTaskComment: (taskId, content, author = defaultAssignee) => {
+        set((state) => {
+          const currentTask = state.tasks[taskId];
+          const trimmed = content.trim();
+          if (!currentTask || !trimmed) return state;
+
+          return {
+            tasks: {
+              ...state.tasks,
+              [taskId]: normalizeTask({
+                ...currentTask,
+                updatedAt: Date.now(),
+                comments: [
+                  ...(currentTask.comments ?? []),
+                  {
+                    id: uuidv4(),
+                    author,
+                    content: trimmed,
+                    createdAt: Date.now()
+                  }
+                ],
+                activity: [
+                  ...(currentTask.activity ?? []),
+                  createActivity(`Comment added by ${author}`)
+                ]
+              })
+            }
           };
         });
       },
@@ -289,6 +364,14 @@ export const useTaskStore = create<TaskState>()(
             columns: newColumns,
             columnOrder: remainingOrder
           };
+        });
+      },
+
+      resetWorkspace: () => {
+        set({
+          tasks: initialTasks,
+          columns: initialColumns,
+          columnOrder: ['todo', 'in-progress', 'review', 'done']
         });
       }
     }),

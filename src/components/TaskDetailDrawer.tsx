@@ -12,6 +12,8 @@ interface TaskDetailDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   onRequestDelete: (taskId: string) => void;
+  onSaved?: (title: string) => void;
+  onCommentAdded?: (title: string) => void;
 }
 
 const priorityOptions: Priority[] = ['low', 'medium', 'high'];
@@ -23,8 +25,8 @@ const toDateInputValue = (value?: string) => {
   return date.toISOString().slice(0, 10);
 };
 
-export const TaskDetailDrawer = ({ task, isOpen, onClose, onRequestDelete }: TaskDetailDrawerProps) => {
-  const { columns, columnOrder, updateTask } = useTaskStore();
+export const TaskDetailDrawer = ({ task, isOpen, onClose, onRequestDelete, onSaved, onCommentAdded }: TaskDetailDrawerProps) => {
+  const { columns, columnOrder, updateTask, addTaskComment } = useTaskStore();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [status, setStatus] = useState('');
@@ -35,6 +37,7 @@ export const TaskDetailDrawer = ({ task, isOpen, onClose, onRequestDelete }: Tas
   const [tagInput, setTagInput] = useState('');
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
   const [checklistInput, setChecklistInput] = useState('');
+  const [commentInput, setCommentInput] = useState('');
 
   useEffect(() => {
     if (!task || !isOpen) return;
@@ -49,6 +52,7 @@ export const TaskDetailDrawer = ({ task, isOpen, onClose, onRequestDelete }: Tas
     setTagInput(task.tags.join(', '));
     setChecklist(task.checklist ?? []);
     setChecklistInput('');
+    setCommentInput('');
   }, [task, isOpen]);
 
   const checklistProgress = useMemo(() => {
@@ -73,7 +77,15 @@ export const TaskDetailDrawer = ({ task, isOpen, onClose, onRequestDelete }: Tas
         .filter(Boolean),
       checklist
     });
+    onSaved?.(title.trim());
     onClose();
+  };
+
+  const handleAddComment = () => {
+    if (!task || !commentInput.trim()) return;
+    addTaskComment(task.id, commentInput);
+    onCommentAdded?.(task.title);
+    setCommentInput('');
   };
 
   const addChecklistItem = () => {
@@ -299,6 +311,64 @@ export const TaskDetailDrawer = ({ task, isOpen, onClose, onRequestDelete }: Tas
                   >
                     <Plus size={16} />
                   </button>
+                </div>
+              </section>
+
+              <section className="rounded-lg border border-slate-200 bg-white p-4">
+                <h4 className="text-sm font-semibold text-slate-950">Comments</h4>
+                <div className="mt-3 space-y-2">
+                  {(task.comments ?? []).length > 0 ? (
+                    (task.comments ?? []).map((comment) => (
+                      <div key={comment.id} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="text-xs font-semibold text-slate-700">{comment.author}</p>
+                          <p className="text-[11px] text-slate-500">{format(comment.createdAt, 'MMM d, h:mm a')}</p>
+                        </div>
+                        <p className="mt-2 text-sm leading-6 text-slate-700">{comment.content}</p>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-3 text-sm text-slate-500">
+                      No comments yet.
+                    </p>
+                  )}
+                </div>
+
+                <div className="mt-3 flex gap-2">
+                  <input
+                    value={commentInput}
+                    onChange={(event) => setCommentInput(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') {
+                        event.preventDefault();
+                        handleAddComment();
+                      }
+                    }}
+                    placeholder="Add a comment"
+                    className="min-w-0 flex-1 rounded-md border border-slate-200 px-3 py-2 text-sm outline-none placeholder:text-slate-400 focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
+                  />
+                  <button
+                    onClick={handleAddComment}
+                    disabled={!commentInput.trim()}
+                    className="rounded-md bg-slate-900 px-3 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Add
+                  </button>
+                </div>
+              </section>
+
+              <section className="rounded-lg border border-slate-200 bg-white p-4">
+                <h4 className="text-sm font-semibold text-slate-950">Activity</h4>
+                <div className="mt-3 space-y-3">
+                  {(task.activity ?? []).slice().reverse().map((activity) => (
+                    <div key={activity.id} className="flex gap-3">
+                      <div className="mt-1 h-2 w-2 rounded-full bg-blue-600" />
+                      <div>
+                        <p className="text-sm text-slate-700">{activity.label}</p>
+                        <p className="mt-0.5 text-[11px] text-slate-500">{format(activity.createdAt, 'MMM d, h:mm a')}</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </section>
             </div>

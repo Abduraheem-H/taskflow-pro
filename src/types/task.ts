@@ -9,6 +9,19 @@ export interface ChecklistItem {
   completed: boolean;
 }
 
+export interface TaskComment {
+  id: string;
+  author: AssigneeId;
+  content: string;
+  createdAt: number;
+}
+
+export interface TaskActivity {
+  id: string;
+  label: string;
+  createdAt: number;
+}
+
 export interface Task {
   id: string;
   title: string;
@@ -22,6 +35,19 @@ export interface Task {
   dueDate?: string;
   updatedAt?: number;
   checklist?: ChecklistItem[];
+  comments?: TaskComment[];
+  activity?: TaskActivity[];
+}
+
+export interface TaskTemplate {
+  id: string;
+  name: string;
+  description: string;
+  title: string;
+  taskDescription: string;
+  priority: Priority;
+  tags: string[];
+  checklist: string[];
 }
 
 export interface Column {

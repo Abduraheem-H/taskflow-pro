@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import { Task, Priority, Column } from '../types/task';
 import { cn } from '../lib/utils';
@@ -7,6 +7,8 @@ interface TaskListProps {
   tasks: Task[];
   columns: Record<string, Column>;
   onOpenTask?: (taskId: string) => void;
+  onBulkUpdate?: (taskIds: string[], updates: Partial<Task>) => void;
+  onBulkDelete?: (taskIds: string[]) => void;
 }
 
 const priorityStyles: Record<Priority, string> = {
@@ -22,7 +24,36 @@ const getInitials = (name?: string) => {
   return initials.slice(0, 2).toUpperCase();
 };
 
-export const TaskList = ({ tasks, columns, onOpenTask }: TaskListProps) => {
+export const TaskList = ({ tasks, columns, onOpenTask, onBulkUpdate, onBulkDelete }: TaskListProps) => {
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const allVisibleSelected = tasks.length > 0 && tasks.every((task) => selectedIds.includes(task.id));
+  const selectedTasks = useMemo(
+    () => tasks.filter((task) => selectedIds.includes(task.id)),
+    [selectedIds, tasks]
+  );
+
+  const toggleTask = (taskId: string) => {
+    setSelectedIds((current) =>
+      current.includes(taskId) ? current.filter((id) => id !== taskId) : [...current, taskId]
+    );
+  };
+
+  const toggleAll = () => {
+    setSelectedIds(allVisibleSelected ? [] : tasks.map((task) => task.id));
+  };
+
+  const handleBulkUpdate = (updates: Partial<Task>) => {
+    if (selectedIds.length === 0) return;
+    onBulkUpdate?.(selectedIds, updates);
+    setSelectedIds([]);
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedIds.length === 0) return;
+    onBulkDelete?.(selectedIds);
+    setSelectedIds([]);
+  };
+
   if (tasks.length === 0) {
     return (
       <div className="flex w-full items-center justify-center rounded-lg border border-dashed border-slate-300 bg-white py-16 text-sm text-slate-500">
@@ -33,8 +64,54 @@ export const TaskList = ({ tasks, columns, onOpenTask }: TaskListProps) => {
 
   return (
     <div className="w-full overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+      {selectedTasks.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-blue-50 px-4 py-3">
+          <p className="text-sm font-semibold text-blue-800">
+            {selectedTasks.length} selected
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => handleBulkUpdate({ priority: 'high' })}
+              className="rounded-md border border-blue-200 bg-white px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100"
+            >
+              Set high priority
+            </button>
+            <select
+              value=""
+              onChange={(event) => {
+                if (event.target.value) {
+                  handleBulkUpdate({ status: event.target.value });
+                }
+              }}
+              className="rounded-md border border-blue-200 bg-white px-3 py-1.5 text-xs font-semibold text-blue-700 outline-none"
+            >
+              <option value="">Move to...</option>
+              {Object.values(columns).map((column) => (
+                <option key={column.id} value={column.id}>
+                  {column.title}
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={handleBulkDelete}
+              className="rounded-md border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50"
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="hidden grid-cols-12 gap-4 border-b border-slate-200 bg-slate-50 px-4 py-3 text-[11px] font-semibold uppercase text-slate-500 md:grid">
-        <div className="col-span-4">Task</div>
+        <div className="col-span-1">
+          <input
+            type="checkbox"
+            checked={allVisibleSelected}
+            onChange={toggleAll}
+            aria-label="Select all visible tasks"
+          />
+        </div>
+        <div className="col-span-3">Task</div>
         <div className="col-span-2">Status</div>
         <div className="col-span-2">Priority</div>
         <div className="col-span-2">Tags</div>
@@ -44,12 +121,21 @@ export const TaskList = ({ tasks, columns, onOpenTask }: TaskListProps) => {
 
       <div className="divide-y divide-slate-100">
         {tasks.map((task) => (
-          <button
+          <div
             key={task.id}
             onClick={() => onOpenTask?.(task.id)}
-            className="grid w-full grid-cols-1 gap-3 px-4 py-4 text-left transition-colors hover:bg-blue-50/60 md:grid-cols-12 md:items-center md:gap-4"
+            className="grid w-full cursor-pointer grid-cols-1 gap-3 px-4 py-4 text-left transition-colors hover:bg-blue-50/60 md:grid-cols-12 md:items-center md:gap-4"
           >
-            <div className="md:col-span-4">
+            <div className="hidden md:col-span-1 md:block">
+              <input
+                type="checkbox"
+                checked={selectedIds.includes(task.id)}
+                onChange={() => toggleTask(task.id)}
+                onClick={(event) => event.stopPropagation()}
+                aria-label={`Select ${task.title}`}
+              />
+            </div>
+            <div className="md:col-span-3">
               <p className="line-clamp-1 text-sm font-semibold text-slate-950">{task.title}</p>
               <p className="mt-1 line-clamp-1 text-xs text-slate-500">
                 {task.description}
@@ -90,7 +176,7 @@ export const TaskList = ({ tasks, columns, onOpenTask }: TaskListProps) => {
             <div className="text-xs text-slate-500 md:col-span-1 md:text-right">
               {task.dueDate ? format(new Date(task.dueDate), 'MMM d') : '-'}
             </div>
-          </button>
+          </div>
         ))}
       </div>
     </div>
