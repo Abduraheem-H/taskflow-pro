@@ -17,10 +17,11 @@ interface TaskState {
     priority: Priority,
     assignee: AssigneeId | undefined,
     dueDate: string | undefined,
-    projectId: ProjectId
+    projectId: ProjectId,
+    tags?: string[]
   ) => void;
   updateTask: (taskId: string, updates: Partial<Task>) => void;
-  deleteTask: (taskId: string, columnId: ColumnId) => void;
+  deleteTask: (taskId: string, columnId?: ColumnId) => void;
   moveTask: (
     sourceColumnId: ColumnId,
     destinationColumnId: ColumnId,
@@ -45,7 +46,9 @@ const initialTasks: Record<string, Task> = {
     status: 'todo',
     priority: 'high',
     createdAt: Date.now(),
+    updatedAt: Date.now(),
     tags: ['design', 'core'],
+    checklist: [],
     projectId: defaultProjectId,
     assignee: defaultAssignee,
     dueDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7).toISOString()
@@ -57,7 +60,9 @@ const initialTasks: Record<string, Task> = {
     status: 'in-progress',
     priority: 'medium',
     createdAt: Date.now(),
+    updatedAt: Date.now(),
     tags: ['auth', 'backend'],
+    checklist: [],
     projectId: defaultProjectId,
     assignee: WORKSPACE_ASSIGNEES[1],
     dueDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 14).toISOString()
@@ -71,6 +76,13 @@ const initialColumns: Record<string, Column> = {
   'done': { id: 'done', title: 'Done', taskIds: [] }
 };
 
+const normalizeTask = (task: Task): Task => ({
+  ...task,
+  updatedAt: task.updatedAt ?? task.createdAt ?? Date.now(),
+  tags: Array.isArray(task.tags) ? task.tags : [],
+  checklist: Array.isArray(task.checklist) ? task.checklist : []
+});
+
 export const useTaskStore = create<TaskState>()(
   persist(
     (set) => ({
@@ -78,16 +90,19 @@ export const useTaskStore = create<TaskState>()(
       columns: initialColumns,
       columnOrder: ['todo', 'in-progress', 'review', 'done'],
 
-      addTask: (columnId, title, description, priority, assignee, dueDate, projectId) => {
+      addTask: (columnId, title, description, priority, assignee, dueDate, projectId, tags = []) => {
         const id = uuidv4();
+        const now = Date.now();
         const newTask: Task = {
           id,
           title,
           description,
           status: columnId,
           priority,
-          createdAt: Date.now(),
-          tags: [],
+          createdAt: now,
+          updatedAt: now,
+          tags,
+          checklist: [],
           projectId,
           assignee,
           dueDate: dueDate || undefined
@@ -106,28 +121,66 @@ export const useTaskStore = create<TaskState>()(
       },
 
       updateTask: (taskId, updates) => {
-        set((state) => ({
-          tasks: {
-            ...state.tasks,
-            [taskId]: { ...state.tasks[taskId], ...updates }
+        set((state) => {
+          const currentTask = state.tasks[taskId];
+          if (!currentTask) return state;
+
+          const nextStatus = updates.status ?? currentTask.status;
+          const shouldMove = updates.status && updates.status !== currentTask.status && state.columns[nextStatus];
+          const updatedTask = normalizeTask({
+            ...currentTask,
+            ...updates,
+            status: shouldMove ? nextStatus : currentTask.status,
+            updatedAt: Date.now()
+          });
+
+          if (!shouldMove) {
+            return {
+              tasks: {
+                ...state.tasks,
+                [taskId]: updatedTask
+              }
+            };
           }
-        }));
+
+          const nextColumns = Object.fromEntries(
+            Object.entries(state.columns).map(([columnId, column]) => {
+              const taskIds = column.taskIds.filter((id) => id !== taskId);
+              return [columnId, { ...column, taskIds }];
+            })
+          ) as Record<string, Column>;
+
+          nextColumns[nextStatus] = {
+            ...nextColumns[nextStatus],
+            taskIds: [...nextColumns[nextStatus].taskIds, taskId]
+          };
+
+          return {
+            tasks: {
+              ...state.tasks,
+              [taskId]: updatedTask
+            },
+            columns: nextColumns
+          };
+        });
       },
 
       deleteTask: (taskId, columnId) => {
         set((state) => {
           const newTasks = { ...state.tasks };
           delete newTasks[taskId];
+          const targetColumnId = columnId ?? state.tasks[taskId]?.status;
           
           return {
             tasks: newTasks,
-            columns: {
-              ...state.columns,
-              [columnId]: {
-                ...state.columns[columnId],
-                taskIds: state.columns[columnId].taskIds.filter(id => id !== taskId)
-              }
-            }
+            columns: Object.fromEntries(
+              Object.entries(state.columns).map(([id, column]) => [
+                id,
+                id === targetColumnId || column.taskIds.includes(taskId)
+                  ? { ...column, taskIds: column.taskIds.filter((id) => id !== taskId) }
+                  : column
+              ])
+            ) as Record<string, Column>
           };
         });
       },
@@ -146,7 +199,7 @@ export const useTaskStore = create<TaskState>()(
           return {
             tasks: {
               ...state.tasks,
-              [taskId]: { ...state.tasks[taskId], status: destColId }
+              [taskId]: { ...state.tasks[taskId], status: destColId, updatedAt: Date.now() }
             },
             columns: {
               ...state.columns,
@@ -240,7 +293,23 @@ export const useTaskStore = create<TaskState>()(
       }
     }),
     {
-      name: 'taskflow-storage'
+      name: 'taskflow-storage',
+      version: 2,
+      migrate: (persistedState) => {
+        const state = persistedState as Partial<TaskState>;
+        const columns = state.columns ?? initialColumns;
+        const columnOrder = state.columnOrder ?? ['todo', 'in-progress', 'review', 'done'];
+        const tasks = Object.fromEntries(
+          Object.entries(state.tasks ?? initialTasks).map(([id, task]) => [id, normalizeTask(task as Task)])
+        ) as Record<string, Task>;
+
+        return {
+          ...state,
+          tasks,
+          columns,
+          columnOrder
+        };
+      }
     }
   )
 );

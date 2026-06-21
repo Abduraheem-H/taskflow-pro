@@ -3,6 +3,12 @@ export type ColumnId = string;
 export type ProjectId = string;
 export type AssigneeId = string;
 
+export interface ChecklistItem {
+  id: string;
+  label: string;
+  completed: boolean;
+}
+
 export interface Task {
   id: string;
   title: string;
@@ -14,6 +20,8 @@ export interface Task {
   projectId: ProjectId;
   assignee?: AssigneeId;
   dueDate?: string;
+  updatedAt?: number;
+  checklist?: ChecklistItem[];
 }
 
 export interface Column {
