@@ -20,6 +20,9 @@ TaskFlow Pro is a premium Kanban workspace for planning, prioritizing, and shipp
 - Persistent board state
 - Optional AI assistant module
 - Assistant action cards for confirmed task updates and status drafts
+- Toasts for task, section, assistant action, and reset feedback
+- Keyboard shortcuts: `/` focuses search, `N` opens task creation, and `Esc` closes drawers/dialogs
+- Task templates, comments, activity history, bulk list actions, and sample-data reset
 
 ## Screenshots
 
