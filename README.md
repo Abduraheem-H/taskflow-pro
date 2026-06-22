@@ -9,7 +9,7 @@ TaskFlow Pro is a premium Kanban workspace for planning, prioritizing, and shipp
 - Zustand (state + persistence)
 - Tailwind CSS v4
 - Hello Pangea DnD
-- Gemini API via `@google/genai`
+- Gemini API via a server-only proxy using `@google/genai`
 
 ## Features
 
@@ -35,13 +35,19 @@ Add screenshots to `./screenshots` and update references:
 
 1. Install dependencies:
    `npm install`
-2. Create an `.env.local` file with your Gemini API key:
+2. Create an `.env.locals` file with your Gemini API key:
    `GEMINI_API_KEY=your_key_here`
 3. Start the dev server:
    `npm run dev`
+4. Build and run the production server:
+   `npm run build`
+   `npm run start`
 
 ## Scripts
 
-- `npm run dev` - start the Vite dev server
-- `npm run build` - build for production
-- `npm run preview` - preview the production build
+- `npm run dev` — start the Vite dev server
+- `npm run build` — build for production
+- `npm run preview` — preview the production build
+- `npm run start` — serve the production app with the `/api/chat` proxy
+- `npm run smoke` — check the production bundle and assistant proxy contract
+- `npm run verify` — run typecheck, build, and smoke checks
