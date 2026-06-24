@@ -2,18 +2,19 @@ import React from 'react';
 import { Draggable } from '@hello-pangea/dnd';
 import { Task, Priority } from '../types/task';
 import { cn } from '../lib/utils';
-import { Clock, MoreHorizontal, Calendar } from 'lucide-react';
+import { Calendar, CircleDot, MoreHorizontal } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface TaskCardProps {
   task: Task;
   index: number;
+  onOpen?: (taskId: string) => void;
 }
 
 const priorityColors: Record<Priority, string> = {
-  low: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-  medium: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-  high: 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+  low: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  medium: 'bg-amber-50 text-amber-700 border-amber-200',
+  high: 'bg-rose-50 text-rose-700 border-rose-200'
 };
 
 const getInitials = (name?: string) => {
@@ -23,7 +24,7 @@ const getInitials = (name?: string) => {
   return initials.slice(0, 2).toUpperCase();
 };
 
-export const TaskCard = ({ task, index }: TaskCardProps) => {
+export const TaskCard = ({ task, index, onOpen }: TaskCardProps) => {
   const dueDateLabel = task.dueDate ? format(new Date(task.dueDate), 'MMM d') : null;
 
   return (
@@ -33,32 +34,50 @@ export const TaskCard = ({ task, index }: TaskCardProps) => {
           ref={provided.innerRef}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
+          onClick={() => onOpen?.(task.id)}
           className={cn(
-            "group bg-white/[0.04] border border-white/10 rounded-xl p-4 mb-3 transition-all hover:border-white/30 hover:-translate-y-0.5 hover:shadow-[0_12px_30px_rgba(0,0,0,0.35)]",
-            snapshot.isDragging ? "shadow-2xl border-white/40 rotate-2" : ""
+            "group mb-2 cursor-pointer rounded-lg border border-slate-200 bg-white p-3 shadow-sm transition-all hover:border-blue-200 hover:shadow-md",
+            snapshot.isDragging ? "rotate-1 border-blue-300 shadow-xl" : ""
           )}
         >
-          <div className="flex items-start justify-between mb-2">
+          <div className="mb-2 flex items-start justify-between gap-3">
             <span className={cn(
-              "px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider border",
+              "rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase",
               priorityColors[task.priority]
             )}>
               {task.priority}
             </span>
-            <button className="opacity-0 group-hover:opacity-100 p-1 hover:bg-white/5 rounded-md transition-all">
-              <MoreHorizontal size={14} className="text-brand-muted" />
+            <button
+              onClick={(event) => {
+                event.stopPropagation();
+                onOpen?.(task.id);
+              }}
+              className="rounded-md p-1 text-slate-400 opacity-0 transition-all hover:bg-slate-100 hover:text-slate-700 group-hover:opacity-100"
+              aria-label={`Open ${task.title}`}
+            >
+              <MoreHorizontal size={14} />
             </button>
           </div>
           
-          <h4 className="text-sm font-medium mb-1 line-clamp-2">{task.title}</h4>
-          <p className="text-xs text-brand-muted mb-4 line-clamp-3 leading-relaxed">
+          <h4 className="mb-1 line-clamp-2 text-sm font-semibold leading-5 text-slate-950">{task.title}</h4>
+          <p className="mb-3 line-clamp-3 text-xs leading-5 text-slate-500">
             {task.description}
           </p>
+
+          {task.tags.length > 0 && (
+            <div className="mb-3 flex flex-wrap gap-1">
+              {task.tags.slice(0, 3).map((tag) => (
+                <span key={tag} className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-600">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
           
-          <div className="flex items-center justify-between pt-3 border-t border-white/10">
-            <div className="flex items-center gap-2 text-[10px] text-brand-muted">
+          <div className="flex items-center justify-between border-t border-slate-100 pt-3">
+            <div className="flex items-center gap-2 text-[10px] text-slate-500">
               <span className="flex items-center gap-1.5">
-                <Clock size={12} />
+                <CircleDot size={12} />
                 <span>{format(task.createdAt, 'MMM d')}</span>
               </span>
               {dueDateLabel && (
@@ -70,7 +89,7 @@ export const TaskCard = ({ task, index }: TaskCardProps) => {
             </div>
             
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-full border border-white/10 bg-gradient-to-br from-indigo-500 to-cyan-400 text-[10px] font-bold text-white flex items-center justify-center shadow-md shadow-indigo-500/30">
+              <div className="flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-slate-900 text-[10px] font-bold text-white">
                 {getInitials(task.assignee)}
               </div>
             </div>
