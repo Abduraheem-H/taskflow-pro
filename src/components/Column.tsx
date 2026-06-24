@@ -12,6 +12,7 @@ interface ColumnProps {
   onAddTask?: (columnId: string) => void;
   onRename?: (columnId: string) => void;
   onDelete?: (columnId: string) => void;
+  onOpenTask?: (taskId: string) => void;
   canDelete?: boolean;
 }
 
@@ -22,6 +23,7 @@ export const Column = ({
   onAddTask,
   onRename,
   onDelete,
+  onOpenTask,
   canDelete = true
 }: ColumnProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -41,38 +43,40 @@ export const Column = ({
   }, [isMenuOpen]);
 
   return (
-    <div className="flex flex-col w-80 shrink-0 h-full">
-      <div className="flex items-center justify-between px-2 mb-4">
+    <div className="flex h-full w-72 shrink-0 flex-col">
+      <div className="mb-3 flex items-center justify-between px-1">
         <div className="flex items-center gap-2">
-          <h3 className="text-sm font-semibold uppercase tracking-widest opacity-60">
+          <h3 className="text-xs font-semibold uppercase text-slate-500">
             {title}
           </h3>
-          <span className="px-2 py-0.5 bg-white/5 border border-white/10 rounded-full text-[10px] font-bold">
+          <span className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[11px] font-semibold text-slate-600">
             {tasks.length}
           </span>
         </div>
         <div className="flex items-center gap-1 relative" ref={menuRef}>
           <button
             onClick={() => onAddTask?.(id)}
-            className="p-1.5 hover:bg-white/5 rounded-lg transition-all text-brand-muted hover:text-white"
+            className="rounded-md p-1.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-950"
+            aria-label={`Add task to ${title}`}
           >
             <Plus size={16} />
           </button>
           <button
             onClick={() => setIsMenuOpen((prev) => !prev)}
-            className="p-1.5 hover:bg-white/5 rounded-lg transition-all text-brand-muted hover:text-white"
+            className="rounded-md p-1.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-950"
+            aria-label={`${title} options`}
           >
             <MoreHorizontal size={16} />
           </button>
 
           {isMenuOpen && (
-            <div className="absolute right-0 top-9 w-40 bg-brand-surface/90 border border-white/10 rounded-xl shadow-xl p-1 z-20 backdrop-blur-xl">
+            <div className="absolute right-0 top-9 z-20 w-40 rounded-lg border border-slate-200 bg-white p-1 shadow-lg">
               <button
                 onClick={() => {
                   setIsMenuOpen(false);
                   onRename?.(id);
                 }}
-                className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-brand-muted hover:text-white hover:bg-white/5"
+                className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-xs text-slate-600 hover:bg-slate-100 hover:text-slate-950"
               >
                 <PencilLine size={14} />
                 Rename
@@ -86,10 +90,10 @@ export const Column = ({
                 }}
                 disabled={!canDelete}
                 className={cn(
-                  "w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs",
+                  "flex w-full items-center gap-2 rounded-md px-3 py-2 text-xs",
                   canDelete
-                    ? "text-red-400 hover:bg-red-500/10"
-                    : "text-brand-muted cursor-not-allowed"
+                    ? "text-red-600 hover:bg-red-50"
+                    : "cursor-not-allowed text-slate-400"
                 )}
               >
                 <Trash2 size={14} />
@@ -106,16 +110,16 @@ export const Column = ({
             ref={provided.innerRef}
             {...provided.droppableProps}
             className={cn(
-              "flex-1 px-2 py-1 rounded-2xl transition-all min-h-[150px]",
-              snapshot.isDraggingOver ? "bg-white/[0.03]" : "bg-transparent"
+              "min-h-[150px] flex-1 rounded-lg border border-slate-200 bg-slate-50/70 p-2 transition-colors",
+              snapshot.isDraggingOver ? "border-blue-300 bg-blue-50" : ""
             )}
           >
             {tasks.map((task, index) => (
-              <TaskCard key={task.id} task={task} index={index} />
+              <TaskCard key={task.id} task={task} index={index} onOpen={onOpenTask} />
             ))}
             {tasks.length === 0 && (
-              <div className="px-3 py-4 text-xs text-brand-muted border border-dashed border-white/15 rounded-xl bg-white/[0.02]">
-                No tasks yet. Add a new task to get started.
+              <div className="rounded-lg border border-dashed border-slate-300 bg-white px-3 py-4 text-xs leading-5 text-slate-500">
+                No tasks yet. Add one to start this section.
               </div>
             )}
             {provided.placeholder}
