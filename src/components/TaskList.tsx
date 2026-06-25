@@ -1,4 +1,4 @@
-import React from 'react';
+ï»¿import React from 'react';
 import { format } from 'date-fns';
 import { Task, Priority, Column } from '../types/task';
 import { cn } from '../lib/utils';
@@ -6,12 +6,13 @@ import { cn } from '../lib/utils';
 interface TaskListProps {
   tasks: Task[];
   columns: Record<string, Column>;
+  onOpenTask?: (taskId: string) => void;
 }
 
 const priorityStyles: Record<Priority, string> = {
-  low: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-  medium: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-  high: 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+  low: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  medium: 'bg-amber-50 text-amber-700 border-amber-200',
+  high: 'bg-rose-50 text-rose-700 border-rose-200'
 };
 
 const getInitials = (name?: string) => {
@@ -21,18 +22,18 @@ const getInitials = (name?: string) => {
   return initials.slice(0, 2).toUpperCase();
 };
 
-export const TaskList = ({ tasks, columns }: TaskListProps) => {
+export const TaskList = ({ tasks, columns, onOpenTask }: TaskListProps) => {
   if (tasks.length === 0) {
     return (
-      <div className="w-full flex items-center justify-center py-16 text-sm text-brand-muted">
+      <div className="flex w-full items-center justify-center rounded-lg border border-dashed border-slate-300 bg-white py-16 text-sm text-slate-500">
         No tasks match your search.
       </div>
     );
   }
 
   return (
-    <div className="w-full">
-      <div className="grid grid-cols-12 gap-4 px-4 py-3 text-[10px] font-semibold uppercase tracking-widest text-brand-muted border-b border-white/10">
+    <div className="w-full overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+      <div className="hidden grid-cols-12 gap-4 border-b border-slate-200 bg-slate-50 px-4 py-3 text-[11px] font-semibold uppercase text-slate-500 md:grid">
         <div className="col-span-4">Task</div>
         <div className="col-span-2">Status</div>
         <div className="col-span-2">Priority</div>
@@ -41,54 +42,55 @@ export const TaskList = ({ tasks, columns }: TaskListProps) => {
         <div className="col-span-1 text-right">Due</div>
       </div>
 
-      <div className="divide-y divide-white/5">
+      <div className="divide-y divide-slate-100">
         {tasks.map((task) => (
-          <div
+          <button
             key={task.id}
-            className="grid grid-cols-12 gap-4 px-4 py-3 items-center hover:bg-white/[0.04] transition-colors"
+            onClick={() => onOpenTask?.(task.id)}
+            className="grid w-full grid-cols-1 gap-3 px-4 py-4 text-left transition-colors hover:bg-blue-50/60 md:grid-cols-12 md:items-center md:gap-4"
           >
-            <div className="col-span-4">
-              <p className="text-sm font-medium line-clamp-1">{task.title}</p>
-              <p className="text-xs text-brand-muted line-clamp-1 mt-1">
+            <div className="md:col-span-4">
+              <p className="line-clamp-1 text-sm font-semibold text-slate-950">{task.title}</p>
+              <p className="mt-1 line-clamp-1 text-xs text-slate-500">
                 {task.description}
               </p>
             </div>
-            <div className="col-span-2">
-              <span className="text-xs font-medium px-2 py-1 rounded-full bg-white/5 border border-white/10">
+            <div className="md:col-span-2">
+              <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-medium text-slate-600">
                 {columns[task.status]?.title ?? 'Unknown'}
               </span>
             </div>
-            <div className="col-span-2">
+            <div className="md:col-span-2">
               <span className={cn(
-                "px-2 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider border",
+                'rounded-full border px-2 py-1 text-[10px] font-semibold uppercase',
                 priorityStyles[task.priority]
               )}>
                 {task.priority}
               </span>
             </div>
-            <div className="col-span-2 flex flex-wrap gap-1">
+            <div className="flex flex-wrap gap-1 md:col-span-2">
               {task.tags.length > 0 ? (
                 task.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="text-[10px] px-2 py-1 rounded-full bg-white/5 border border-white/10"
+                    className="rounded-md bg-slate-100 px-2 py-1 text-[10px] font-medium text-slate-600"
                   >
                     {tag}
                   </span>
                 ))
               ) : (
-                <span className="text-xs text-brand-muted">—</span>
+                <span className="text-xs text-slate-400">-</span>
               )}
             </div>
-            <div className="col-span-1 flex justify-center">
-              <div className="w-7 h-7 rounded-full bg-white/10 border border-white/10 text-[10px] font-semibold flex items-center justify-center">
+            <div className="flex md:col-span-1 md:justify-center">
+              <div className="flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-slate-900 text-[10px] font-semibold text-white">
                 {getInitials(task.assignee)}
               </div>
             </div>
-            <div className="col-span-1 text-right text-xs text-brand-muted">
-              {task.dueDate ? format(new Date(task.dueDate), 'MMM d') : '—'}
+            <div className="text-xs text-slate-500 md:col-span-1 md:text-right">
+              {task.dueDate ? format(new Date(task.dueDate), 'MMM d') : '-'}
             </div>
-          </div>
+          </button>
         ))}
       </div>
     </div>
