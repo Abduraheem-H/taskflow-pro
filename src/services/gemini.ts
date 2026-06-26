@@ -3,7 +3,7 @@ import { Message } from "../types/chat";
 
 const apiKey = process.env.GEMINI_API_KEY;
 
-export async function generateChatResponse(messages: Message[]) {
+export async function generateChatResponse(messages: Message[], workspaceContext?: string) {
   if (!apiKey) {
     throw new Error("Gemini API key is missing. Please configure it in the Secrets panel.");
   }
@@ -26,7 +26,13 @@ export async function generateChatResponse(messages: Message[]) {
         { role: 'user', parts: [{ text: lastMessage }] }
       ],
       config: {
-        systemInstruction: "You are TaskFlow AI, a workspace assistant for a modern project management app. You are helpful, concise, and professional. You support markdown formatting.",
+        systemInstruction: [
+          "You are TaskFlow AI, a workspace assistant inside a project management app.",
+          "Keep answers practical, concise, and tied to the user's tasks, projects, deadlines, priorities, and statuses.",
+          "You may suggest edits, plans, summaries, and task breakdowns, but you cannot directly change task data.",
+          "Use markdown formatting when it improves scanability.",
+          workspaceContext ? `Current workspace context:\n${workspaceContext}` : ""
+        ].filter(Boolean).join("\n\n"),
       }
     });
 
