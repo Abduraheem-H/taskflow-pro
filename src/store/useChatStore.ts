@@ -5,10 +5,8 @@ import { ChatSession, Message } from '../types/chat';
 interface ChatState {
   sessions: ChatSession[];
   currentSessionId: string | null;
-  isSidebarOpen: boolean;
   
   // Actions
-  setSidebarOpen: (open: boolean) => void;
   createNewSession: () => string;
   setCurrentSession: (id: string) => void;
   addMessage: (sessionId: string, message: Message) => void;
@@ -19,12 +17,9 @@ interface ChatState {
 
 export const useChatStore = create<ChatState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       sessions: [],
       currentSessionId: null,
-      isSidebarOpen: true,
-
-      setSidebarOpen: (open) => set({ isSidebarOpen: open }),
 
       createNewSession: () => {
         const newSession: ChatSession = {
